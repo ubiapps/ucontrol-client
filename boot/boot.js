@@ -97,3 +97,4 @@ function startMonitor() {
 logger.info("ucontrol booting...");
 setWorkingDirectory();
 checkUpdate();
+setReboot(5*60000);

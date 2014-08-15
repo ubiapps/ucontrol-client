@@ -29,6 +29,7 @@ var startFHT = function() {
       fhtMonitor = new FS20(config.get().fs20Port);
       fhtMonitor.on("packet", onPacketReceived);
       fhtMonitor.start();
+      setTimeout(transmitData,config.get().transmitFrequency);
     } catch (e) {
       logger.error("failed to open transceiver port: " + config.get().fs20Port + " error is: " + JSON.stringify(e));
     }
@@ -37,13 +38,23 @@ var startFHT = function() {
   }
 };
 
+var createFolder = function(name) {
+  var folderPath = path.join(__dirname,name);
+  fs.mkdir(folderPath);
+};
+
 var initialise = function() {
+  // Check log folders.
+  createFolder("logs");
+  createFolder("transmit");
+  createFolder("pending");
+
   var devKey = config.getLocal("devKey","");
   if (devKey.length === 0) {
     request.post(config.get().server + "/register", { json: {} }, function(err,resp,body) {
       if (err !== null || body.id.length === 0) {
         logger.error("failed to register with server: " + JSON.stringify(err));
-        setTimeout(initialise,config.get().transmitFrequency);
+        setTimeout(initialise,config.get().networkErrorRebootTime);
       } else {
         config.setLocal("devKey",body.id);
         startFHT();
@@ -116,4 +127,5 @@ function transmitData() {
   }
 }
 
-setTimeout(transmitData,config.get().transmitFrequency);
+initialise();
+
