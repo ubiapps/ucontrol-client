@@ -1,4 +1,5 @@
 require("shelljs/global");
+var fs = require('fs');
 
 var logger = require("winston");
 logger.add(logger.transports.File, { filename: "bootstrap.log" });
@@ -55,4 +56,16 @@ function checkUpdate() {
 }
 
 logger.info("ucontrol starting...");
-checkUpdate();
+//checkUpdate();
+
+//var out = fs.openSync('./out.log', 'a');
+//var err = fs.openSync('./out.log', 'a');
+//
+//var cp = require('child_process');
+//var child = cp.spawn('forever', ["start","./spawn.js"], { detached: true, stdio: [ 'ignore', out, err ] });
+//child.unref();
+
+exec("forever -c node start spawn.js",function(code,output) {
+  logger.info("exiting");
+});
+
