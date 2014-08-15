@@ -55,6 +55,7 @@ function setWorkingDirectory() {
 }
 
 function checkUpdate() {
+  var upToDate = false;
   logger.info("checking for update...");
 
   var gitFailure = function(cmd) {
@@ -64,20 +65,26 @@ function checkUpdate() {
     setReboot(config.get().networkErrorRebootTime);
   };
 
-  shell.exec("git fetch --all", function(code,output) {
+  shell.exec("git fetch --all -v", function(code,output) {
     logger.info("git fetch finished: " + code + " output: " + output);
     if (code === 0) {
+      upToDate = output.indexOf("up to date") !== -1;
+      if (upToDate) {
+        logger.info("already up to date");
+      } else {
+        logger.info("update received");
+      }
       shell.exec("git reset --hard origin/master", function(code,output) {
         logger.info("git reset finished: " + code + " output: " + output);
         if (code === 0) {
           config.setLocal("gitFailCount",0);
 
           // Check if an update was received (or there is a pending install)
-          if (output.toLowerCase().indexOf("already up-to-date") !== -1 && config.getLocal("npmFailCount",0) === 0 && forceInstall === false) {
-            logger.info("no update found");
+          if (upToDate && config.getLocal("npmFailCount",0) === 0 && forceInstall === false) {
+            logger.info("npm install not required");
             startMonitor();
           } else {
-            // Update received - install it.
+            // npm install update received - install it.
             installUpdate();
           }
         } else {
