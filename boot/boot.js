@@ -57,26 +57,35 @@ function setWorkingDirectory() {
 function checkUpdate() {
   logger.info("checking for update...");
 
-  shell.exec("git pull", function(code,output) {
-    logger.info("git finished: " + code + " output: " + output);
+  var gitFailure = function(cmd) {
+    logger.error("git " + cmd + " command failed");
+    config.setLocal("gitFailCount",config.getLocal("gitFailCount",0) + 1);
+    // Now what? Could be network error?
+    setReboot(config.get().networkErrorRebootTime);
+  };
+
+  shell.exec("git fetch --all", function(code,output) {
+    logger.info("git fetch finished: " + code + " output: " + output);
     if (code === 0) {
-      config.setLocal("gitFailCount",0);
+      shell.exec("git reset --hard origin/master", function(code,output) {
+        logger.info("git reset finished: " + code + " output: " + output);
+        if (code === 0) {
+          config.setLocal("gitFailCount",0);
 
-      // Check if an update was received (or there is a pending install)
-      if (output.toLowerCase().indexOf("already up-to-date") !== -1 && config.getLocal("npmFailCount",0) === 0 && forceInstall === false) {
-        logger.info("no update found");
-        startMonitor();
-      } else {
-        // Update received - install it.
-        installUpdate();
-      }
+          // Check if an update was received (or there is a pending install)
+          if (output.toLowerCase().indexOf("already up-to-date") !== -1 && config.getLocal("npmFailCount",0) === 0 && forceInstall === false) {
+            logger.info("no update found");
+            startMonitor();
+          } else {
+            // Update received - install it.
+            installUpdate();
+          }
+        } else {
+          gitFailure("reset");
+        }
+      });
     } else {
-      logger.error("git pull command failed");
-
-      config.setLocal("gitFailCount",config.getLocal("gitFailCount",0) + 1);
-
-      // Now what? Could be network error?
-      setReboot(config.get().networkErrorRebootTime);
+      gitFailure("fetch");
     }
   });
 }
