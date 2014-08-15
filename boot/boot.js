@@ -22,7 +22,7 @@ function setReboot(timeout) {
 
   var reboot = function() {
     logger.info("rebooting....");
-    shell.exec("reboot");
+    shell.exec("sudo reboot");
   }
 
   setTimeout(reboot,elapse);

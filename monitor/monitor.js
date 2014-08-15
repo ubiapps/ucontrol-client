@@ -23,15 +23,19 @@ var request = requestLib.defaults({
   }
 });
 
+var getFS20Port = function() {
+  return config.getLocal("fs20Port","/dev/ttyAMA0");
+};
+
 var startFHT = function() {
   if (fhtMonitor === null) {
     try {
-      fhtMonitor = new FS20(config.get().fs20Port);
+      fhtMonitor = new FS20(getFS20Port());
       fhtMonitor.on("packet", onPacketReceived);
       fhtMonitor.start();
       setTimeout(transmitData,config.get().transmitFrequency);
     } catch (e) {
-      logger.error("failed to open transceiver port: " + config.get().fs20Port + " error is: " + JSON.stringify(e));
+      logger.error("failed to open transceiver port: " + getFS20Port() + " error is: " + JSON.stringify(e));
     }
   } else {
     logger.error("fhtMonitor already running");

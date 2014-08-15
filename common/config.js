@@ -9,7 +9,7 @@ var load = function() {
 };
 
 var loadLocal = function() {
-  if (fs.exists(localConfigPath)) {
+  if (fs.existsSync(localConfigPath)) {
     localConfig = require(localConfigPath);
   }
   return localConfig;
