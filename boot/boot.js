@@ -1,8 +1,8 @@
 "use strict";
 var forceInstall = false;
 
-//var shell = require("shelljs");
-var shell = require("./shell.js");
+var shell = require("shelljs");
+//var shell = require("./shell.js");
 var config = require("../common/config.js");
 
 // Start logger.
