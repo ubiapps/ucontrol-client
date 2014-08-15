@@ -1,8 +1,8 @@
 {
-  "name": "ucontrol-client",
+  "name": "ucontrol-client-boot",
   "version": "0.0.0",
-  "description": "ucontrol client application",
-  "main": "index.js",
+  "description": "boot-up code for ucontrol client application",
+  "main": "boot.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -16,7 +16,6 @@
     "url": "https://github.com/ubiapps/ucontrol-client/issues"
   },
   "dependencies": {
-    "winston": "~0.7.3",
-    "node-uuid": "~1.4.1"
+    "winston": "~0.7.3"
   }
 }
