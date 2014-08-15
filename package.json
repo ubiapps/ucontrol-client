@@ -14,5 +14,8 @@
   "license": "BSD-2-Clause",
   "bugs": {
     "url": "https://github.com/ubiapps/ucontrol-client/issues"
+  },
+  "dependencies": {
+    "winston": "~0.7.3"
   }
 }
