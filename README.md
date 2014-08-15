@@ -1,4 +1,4 @@
 ucontrol-client
 ===============
 
-Client-side uControl app
+Client-side uControl app. 
