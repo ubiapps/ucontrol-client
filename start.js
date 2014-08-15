@@ -54,5 +54,5 @@ function checkUpdate() {
   });
 }
 
-logger.info("starting...");
+logger.info("ucontrol starting...");
 checkUpdate();
