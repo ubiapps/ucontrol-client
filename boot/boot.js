@@ -1,25 +1,28 @@
-require("shelljs/global");
-var fs = require('fs');
+"use strict";
+var forceInstall = false;
 
+//var shell = require("shelljs");
+var shell = require("./shell.js");
+var config = require("../common/config.js");
+
+// Start logger.
 var logger = require("winston");
 logger.add(logger.transports.File, { filename: "bootstrap.log" });
 
-function checkInstall() {
-  // Has a new version been downloaded?
+function setReboot(timeout) {
+  var elapse;
+  if (typeof timeout === "undefined") {
+    var midnight = new Date();
+    midnight.setUTCHours(24,0,0,0);
 
-  // Unzip new version
-}
-
-function setReboot() {
-  var midnight = new Date();
-  midnight.setUTCHours(24,0,0,0);
-
-  var elapse = midnight.getTime() - Date.now();
+    elapse = midnight.getTime() - Date.now();
+  } else {
+    elapse = timeout;
+  }
 
   var reboot = function() {
     logger.info("rebooting....");
-    var exec = require("child_process").exec;
-    exec("reboot");
+    shell.exec("reboot");
   }
 
   setTimeout(reboot,elapse);
@@ -28,44 +31,69 @@ function setReboot() {
 function installUpdate() {
   logger.info("installing update");
 
-  exec("npm install", function(code, output) {
+  shell.exec("npm install", function(code, output) {
     if (code === 0) {
       logger.info("update installed");
+      config.setLocal("npmFailCount",0);
+      shell.exec("reboot");
     } else {
       logger.error("npm install failed");
+      config.setLocal("npmFailCount", config.getLocal("npmFailCount",0) + 1);
+
+      // Could be network error?
+      setReboot(config.get().networkErrorRebootTime);
     }
   });
+}
+
+function setWorkingDirectory() {
+  logger.info("setting working directory");
+  logger.info("changing to : " + __dirname);
+  shell.cd(__dirname);
+  shell.cd("..");
+  logger.info("now in: " + shell.pwd());
 }
 
 function checkUpdate() {
   logger.info("checking for update...");
-  logger.info(pwd());
 
-  exec("git pull", function(code,output) {
+  shell.exec("git pull", function(code,output) {
     logger.info("git finished: " + code + " output: " + output);
     if (code === 0) {
-      if (output.toLowerCase().indexOf("already up-to-date") !== -1) {
+      config.setLocal("gitFailCount",0);
+
+      // Check if an update was received (or there is a pending install)
+      if (output.toLowerCase().indexOf("already up-to-date") !== -1 && config.getLocal("npmFailCount",0) === 0 && forceInstall === false) {
         logger.info("no update found");
+        startMonitor();
       } else {
+        // Update received - install it.
         installUpdate();
       }
     } else {
       logger.error("git pull command failed");
+
+      config.setLocal("gitFailCount",config.getLocal("gitFailCount",0) + 1);
+
+      // Now what? Could be network error?
+      setReboot(config.get().networkErrorRebootTime);
     }
   });
 }
 
-logger.info("ucontrol starting...");
-//checkUpdate();
 
-//var out = fs.openSync('./out.log', 'a');
-//var err = fs.openSync('./out.log', 'a');
-//
-//var cp = require('child_process');
-//var child = cp.spawn('forever', ["start","./spawn.js"], { detached: true, stdio: [ 'ignore', out, err ] });
-//child.unref();
+function startMonitor() {
+  logger.info("starting monitor");
 
-exec("forever -c node start spawn.js",function(code,output) {
-  logger.info("exiting");
-});
+  shell.exec("forever -c node start monitor/monitor.js",function(code,output) {
+    if (code === 0) {
+      logger.info("monitor started ok");
+    } else {
+      logger.error("monitor failed to start with error code: " + code + " and output: " + output);
+    }
+  });
+}
 
+logger.info("ucontrol booting...");
+setWorkingDirectory();
+checkUpdate();

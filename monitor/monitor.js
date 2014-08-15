@@ -1,56 +1,58 @@
+"use strict";
+
 var fs = require("fs");
 var path = require("path");
 var FS20 = require("./fs20/cul");
+var config = require("../common/config")
 var pending = [];
 var pendingCounter = 0;
 var pendingThreshold = 10;
+var fhtMonitor = null;
 
 var logger = require("winston");
 logger.add(logger.transports.File, { filename: "client.log" });
 
-try {
-  var configTxt = fs.readFileSync("./config.json");
-  var config = JSON.parse(configTxt);
-} catch (e) {
-  logger.error("failed to load config file: " + JSON.stringify(e));
-}
-
 var requestLib = require("request");
 var request = requestLib.defaults({
   headers: {
-    "x-api-key": "c9a66"
+    "x-api-key": config.get()["x-api-key"]
   },
   auth: {
-    user: "ubiapps",
-    pass: "sppaibu"
+    user: config.get().user,
+    pass: config.get().pass
   }
 });
 
 var startFHT = function() {
-  if (config.hasOwnProperty("devKey")) {
+  if (fhtMonitor === null) {
     try {
-      fhtMonitor = new FS20(config.fs20Port);
+      fhtMonitor = new FS20(config.get().fs20Port);
       fhtMonitor.on("packet", onPacketReceived);
       fhtMonitor.start();
     } catch (e) {
-      logger.error("failed to open transceiver port: " + config.fs20Port + " error is: " + JSON.stringify(e));
+      logger.error("failed to open transceiver port: " + config.get().fs20Port + " error is: " + JSON.stringify(e));
     }
+  } else {
+    logger.error("fhtMonitor already running");
   }
 };
 
-if (!config.hasOwnProperty("devKey")) {
-  request.post(config.server + "/register", { json: {} }, function(err,resp,body) {
-    if (err !== null) {
-      logger.error("failed to register with server: " + JSON.stringify(err));
-    } else {
-      config.devKey = body.id;
-      fs.writeFileSync("./config.json",JSON.stringify(config,null,2));
-      startFHT();
-    }
-  });
-} else {
-  startFHT();
-}
+var initialise = function() {
+  var devKey = config.getLocal("devKey","");
+  if (devKey.length === 0) {
+    request.post(config.get().server + "/register", { json: {} }, function(err,resp,body) {
+      if (err !== null || body.id.length === 0) {
+        logger.error("failed to register with server: " + JSON.stringify(err));
+        setTimeout(initialise,config.get().transmitFrequency);
+      } else {
+        config.setLocal("devKey",body.id);
+        startFHT();
+      }
+    });
+  } else {
+    startFHT();
+  }
+};
 
 function onPacketReceived(timestamp, packet) {
   // Received a new packet - store it.
@@ -81,7 +83,7 @@ function doTransmit(files,index,cb) {
   var file = files[index];
   var transmitData = fs.readFileSync(file).toString();
 
-  request.post(config.server + "/data/" + config.devKey, { json: { data: transmitData }}, function(err,resp,body) {
+  request.post(config.get().server + "/data/" + config.getLocal("devKey"), { json: { data: transmitData }}, function(err,resp,body) {
     if (err !== null) {
       logger.error("failed to post data to server: " + JSON.stringify(err));
       cb();
@@ -106,12 +108,12 @@ function transmitData() {
   var transmitFiles = fs.readdirSync(transmitDir).map(function(f) { return path.join(transmitDir,f); });
   if (transmitFiles.length > 0) {
     doTransmit(transmitFiles,0,function() {
-      setTimeout(transmitData,config.period);
+      setTimeout(transmitData,config.get().transmitFrequency);
     });
   } else {
     logger.info("no files to transmit");
-    setTimeout(transmitData,config.period);
+    setTimeout(transmitData,config.get().transmitFrequency);
   }
 }
 
-setTimeout(transmitData,config.period);
+setTimeout(transmitData,config.get().transmitFrequency);

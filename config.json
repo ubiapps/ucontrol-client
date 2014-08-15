@@ -1,0 +1,9 @@
+{
+  "networkErrorRebootTime": 300000,
+  "server": "http://ucontrolapi.ubiapps.com",
+  "x-api-key": "c9a66",
+  "user": "ubiapps",
+  "pass": "sppaibu",
+  "transmitFrequency": 10000,
+  "fs20Port": "com11"
+}
