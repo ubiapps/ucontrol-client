@@ -5,15 +5,6 @@ var shell = require("shelljs");
 var logger = require("winston");
 logger.add(logger.transports.File, { filename: "bootstrap.log" });
 
-/**********************************************************
- * DEBUG ONLY
-**********************************************************/
-/*
-var shell = require("./shell.js"); // also need to install shelljs locally
-var forceInstall = false; // force npm install
-*/
-/**********************************************************/
-
 // Reboots after the given time interval.
 function setReboot(timeout) {
   logger.info("requesting reboot");
@@ -93,7 +84,7 @@ function checkUpdate() {
           config.setLocal("gitFailCount",0);
 
           // If an update was received we need to install it.
-          if (upToDate && config.getLocal("npmFailCount",0) === 0 && forceInstall === false) {
+          if (upToDate && config.getLocal("npmFailCount",0) === 0) {
             logger.info("npm install not required");
             startMonitor();
           } else {

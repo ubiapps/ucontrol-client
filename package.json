@@ -18,6 +18,7 @@
   "dependencies": {
     "winston": "~0.7.3",
     "serialport": "~1.4.5",
-    "request": "~2.40.0"
+    "request": "~2.40.0",
+    "shelljs": "~0.3.0"
   }
 }
