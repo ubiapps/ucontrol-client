@@ -4,5 +4,6 @@
   "x-api-key": "c9a66",
   "user": "ubiapps",
   "pass": "sppaibu",
-  "transmitFrequency": 10000
+  "transmitFrequency": 10000,
+  "remoteBranch": "dist-001"
 }

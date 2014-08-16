@@ -1,20 +1,28 @@
 "use strict";
-var forceInstall = false;
 
-var shell = require("shelljs");
-//var shell = require("./shell.js");
 var config = require("../common/config.js");
-
-// Start logger.
+var shell = require("shelljs");
 var logger = require("winston");
 logger.add(logger.transports.File, { filename: "bootstrap.log" });
 
+/**********************************************************
+ * DEBUG ONLY
+**********************************************************/
+/*
+var shell = require("./shell.js"); // also need to install shelljs locally
+var forceInstall = false; // force npm install
+*/
+/**********************************************************/
+
+// Reboots after the given time interval.
 function setReboot(timeout) {
+  logger.info("requesting reboot");
+
   var elapse;
+  // If no timeout given default to midnight.
   if (typeof timeout === "undefined") {
     var midnight = new Date();
     midnight.setUTCHours(24,0,0,0);
-
     elapse = midnight.getTime() - Date.now();
   } else {
     elapse = timeout;
@@ -28,6 +36,7 @@ function setReboot(timeout) {
   setTimeout(reboot,elapse);
 }
 
+// Executes npm install
 function installUpdate() {
   logger.info("installing update");
 
@@ -46,17 +55,19 @@ function installUpdate() {
   });
 }
 
+// Changes the working directory to be the project root.
 function setWorkingDirectory() {
   logger.info("setting working directory");
   logger.info("changing to : " + __dirname);
   shell.cd(__dirname);
   shell.cd("..");
-  logger.info("now in: " + shell.pwd());
+  logger.info("now in directory: " + shell.pwd());
 }
 
+// Executes git fetch on project repository.
 function checkUpdate() {
-  var upToDate = false;
   logger.info("checking for update...");
+  var upToDate = false;
 
   var gitFailure = function(cmd) {
     logger.error("git " + cmd + " command failed");
@@ -65,26 +76,29 @@ function checkUpdate() {
     setReboot(config.get().networkErrorRebootTime);
   };
 
-  shell.exec("git fetch --all -v", function(code,output) {
+  shell.exec("git fetch -v origin " + config.get().remoteBranch, function(code,output) {
     logger.info("git fetch finished: " + code + " output: " + output);
     if (code === 0) {
+      // Determine if anything new was fetched.
       upToDate = output.indexOf("up to date") !== -1;
       if (upToDate) {
         logger.info("already up to date");
       } else {
         logger.info("update received");
       }
-      shell.exec("git reset --hard origin/master", function(code,output) {
+      // Reset local index to remote master.
+      shell.exec("git reset --hard origin/" + config.get().remoteBranch, function(code,output) {
         logger.info("git reset finished: " + code + " output: " + output);
         if (code === 0) {
           config.setLocal("gitFailCount",0);
 
-          // Check if an update was received (or there is a pending install)
+          // If an update was received we need to install it.
           if (upToDate && config.getLocal("npmFailCount",0) === 0 && forceInstall === false) {
             logger.info("npm install not required");
             startMonitor();
           } else {
             // npm install update received - install it.
+            logger.info("npm install required");
             installUpdate();
           }
         } else {
@@ -97,7 +111,7 @@ function checkUpdate() {
   });
 }
 
-
+// Launch the monitor script using forever
 function startMonitor() {
   logger.info("starting monitor");
 
