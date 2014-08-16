@@ -7,7 +7,6 @@ logger.add(logger.transports.File, { filename: "bootstrap.log" });
 
 // Reboot after the given time interval.
 function setReboot(timeout) {
-  logger.info("requesting reboot");
 
   var elapse;
   // If no timeout given default to midnight.
@@ -23,6 +22,8 @@ function setReboot(timeout) {
     logger.info("rebooting....");
     shell.exec("sudo reboot");
   }
+
+  logger.info("requesting reboot in " + elapse + " msec");
 
   setTimeout(reboot,elapse);
 }
