@@ -5,7 +5,7 @@ var shell = require("shelljs");
 var logger = require("winston");
 logger.add(logger.transports.File, { filename: "bootstrap.log" });
 
-// Reboots after the given time interval.
+// Reboot after the given time interval.
 function setReboot(timeout) {
   logger.info("requesting reboot");
 
