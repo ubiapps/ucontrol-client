@@ -31,7 +31,7 @@ function setReboot(timeout) {
 function installUpdate() {
   logger.info("installing update");
 
-  shell.exec("npm install", function(code, output) {
+  shell.exec("/usr/local/bin/npm install", function(code, output) {
     if (code === 0) {
       logger.info("update installed");
       config.setLocal("npmFailCount",0);
@@ -67,7 +67,7 @@ function checkUpdate() {
     setReboot(config.get().networkErrorRebootTime);
   };
 
-  shell.exec("git fetch -v origin " + config.get().remoteBranch, function(code,output) {
+  shell.exec("git fetch -v origin " + config.get().remoteBranch + ":/refs/remotes/origin/" + congi.get().remoteBranch, function(code,output) {
     logger.info("git fetch finished: " + code + " output: " + output);
     if (code === 0) {
       // Determine if anything new was fetched.
@@ -106,7 +106,7 @@ function checkUpdate() {
 function startMonitor() {
   logger.info("starting monitor");
 
-  shell.exec("forever -c node start monitor/monitor.js",function(code,output) {
+  shell.exec("/usr/local/bin/forever -c node start monitor/monitor.js",function(code,output) {
     if (code === 0) {
       logger.info("monitor started ok");
     } else {
