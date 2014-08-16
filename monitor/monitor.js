@@ -3,11 +3,15 @@
 var fs = require("fs");
 var path = require("path");
 var FS20 = require("./fs20/cul");
-var config = require("../common/config")
+var config = require("../common/config");
+var FHTAdapterClass = require("./fs20/fhtAdapter");
+var FS20DeviceClass = require("./fs20/fs20Device");
 var pending = [];
-var pendingCounter = 0;
-var pendingThreshold = 10;
+var pendingPacketCount = 0;
+var pendingFileCount = 0;
 var fhtMonitor = null;
+var fs20Device = null;
+var measuredTemp = 0.0;
 
 var logger = require("winston");
 logger.add(logger.transports.File, { filename: "client.log" });
@@ -30,6 +34,7 @@ var getFS20Port = function() {
 var startFHT = function() {
   if (fhtMonitor === null) {
     try {
+      fs20Device = new FS20DeviceClass(config.getLocal("fs20Code"));
       fhtMonitor = new FS20(getFS20Port());
       fhtMonitor.on("packet", onPacketReceived);
       fhtMonitor.start();
@@ -73,24 +78,29 @@ function onPacketReceived(timestamp, packet) {
   // Received a new packet - store it.
   var packetDate = new Date(timestamp);
 
-  // Add packet to running log file.
-  var d = new Date(packetDate.getUTCFullYear(), packetDate.getUTCMonth(), packetDate.getUTCDate(),  packetDate.getUTCHours(), packetDate.getUTCMinutes(), packetDate.getUTCSeconds());
-  var logFile = path.join(__dirname,'logs/fhz-' + d.getDate() + '-' + d.getMonth() + '-' + d.getFullYear() + '.log');
-  fs.appendFileSync(logFile,d.getTime() + " " + packet.toString() + "\n");
+  // Add packet to catch-all log file.
+  var logFile = path.join(__dirname,'logs/fhz-' + packetDate.getUTCDate() + '-' + packetDate.getUTCMonth() + '-' + packetDate.getUTCFullYear() + '.log');
+  fs.appendFileSync(logFile,timestamp + " " + packet.toString() + "\n");
 
-  // Add packet to pending file
-  var pendingFile = path.join(__dirname,'pending/' + pendingCounter + '.log');
-  fs.appendFileSync(pendingFile,d.getTime() + " " + packet.toString() + "\n");
+  var adapter = new FHTAdapterClass(packet);
+  if (adapter.getDeviceCode().toLowerCase() === config.getLocal("fs20Code").toLowerCase()) {
+    adapter.applyTo(fs20Device);
 
-  pending.push({
-    timestamp: d.getTime(),
-    payload: packet.toString()
-  });
+    if (measuredTemp !== fs20Device.getData("measuredTemp")) {
+      measuredTemp = fs20Device.getData("measuredTemp");
 
-  if (pending.length === pendingThreshold) {
-    fs.renameSync(pendingFile,path.join(__dirname,'transmit/' + pendingCounter + '.log'));
-    pendingCounter++;
-    pending = [];
+      // Add packet to pending file
+      var pendingFile = path.join(__dirname,'pending/' + pendingFileCount + '.log');
+      fs.appendFileSync(pendingFile,timestamp + " " + measuredTemp + "\n");
+
+      pendingPacketCount++;
+
+      if (pendingPacketCount === config.get().pendingPacketThreshold) {
+        fs.renameSync(pendingFile,path.join(__dirname,'transmit/' + pendingFileCount + '.log'));
+        pendingFileCount++;
+        pendingPacketCount = 0;
+      }
+    }
   }
 }
 
