@@ -67,7 +67,7 @@ function checkUpdate() {
     setReboot(config.get().networkErrorRebootTime);
   };
 
-  shell.exec("git fetch -v origin " + config.get().remoteBranch + ":/refs/remotes/origin/" + config.get().remoteBranch, function(code,output) {
+  shell.exec("git fetch -v origin " + config.get().remoteBranch + ":refs/remotes/origin/" + config.get().remoteBranch, function(code,output) {
     logger.info("git fetch finished: " + code + " output: " + output);
     if (code === 0) {
       // Determine if anything new was fetched.
