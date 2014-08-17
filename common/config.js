@@ -4,6 +4,7 @@ var fs = require("fs");
 var path = require("path");
 var config = require("../config.json");
 var localConfigPath = path.join(__dirname,"../","config.local.json");
+var utils = require("./utils");
 var localConfig = {};
 
 var load = function() {
@@ -12,7 +13,16 @@ var load = function() {
 
 var loadLocal = function() {
   if (fs.existsSync(localConfigPath)) {
-    localConfig = require(localConfigPath);
+    var txt = fs.readFileSync(localConfigPath);
+    try {
+      localConfig = JSON.parse(txt);
+    } catch (e) {
+      utils.logger.error("failed to parse config file!");
+      localConfig = {};
+    }
+  } else {
+    utils.logger.error("config file missing!");
+    localConfig = {};
   }
   return localConfig;
 };
@@ -22,15 +32,32 @@ var saveLocal = function() {
 };
 
 var getLocal = function(name, def) {
-  if (!localConfig.hasOwnProperty(name)) {
-    localConfig[name] = def;
-  }
+  loadLocal();
+  if (typeof name === "undefined") {
+    return localConfig;
+  } else {
+    if (!localConfig.hasOwnProperty(name)) {
+      localConfig[name] = def;
+    }
 
-  return localConfig[name];
+    return localConfig[name];
+  }
 };
 
 var setLocal = function(name,val) {
   localConfig[name] = val;
+  saveLocal();
+};
+
+var resetLocal = function() {
+  localConfig.gitFailCount = 0;
+  localConfig.fs20Port = "/dev/ttyAMA0";
+  localConfig.sessionTransmit = 0;
+  localConfig.totalTransmit = 0;
+  localConfig.seenDevices = {};
+  delete localConfig.fs20Code;
+  delete localConfig.devKey;
+
   saveLocal();
 };
 
@@ -39,5 +66,6 @@ loadLocal();
 module.exports = {
   get: load,
   getLocal: getLocal,
-  setLocal: setLocal
+  setLocal: setLocal,
+  resetLocal: resetLocal
 };

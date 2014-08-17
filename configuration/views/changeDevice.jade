@@ -1,0 +1,30 @@
+extends layout
+
+block content
+    br
+    p.alert.alert-warning Consider resetting before changing the device code, as doing so may invalidate data already collected.
+    form(name='input', action='setDevice', method='POST')
+        .panel.panel-default
+            .panel-heading broadcast device code
+            .panel-body
+                p Only data from the selected device will be broadcast to the hub.
+                - if (Object.keys(local.seenDevices).length > 0) {
+                    p The following devices are in range.
+                - } else {
+                    p No devices found.
+                - }
+                a.btn.btn-default.pull-right(href="/changeDevice") refresh
+            ul.list-group
+                - for (var d in local.seenDevices) {
+                    li.list-group-item
+                        div.radio
+                            label
+                                - if (d === local.fs20Code) {
+                                    input(id="device-#{d}", type='radio', value='#{d}', name='devices',checked)
+                                - } else {
+                                    input(id="device-#{d}", type='radio', value='#{d}', name='devices')
+                                - }
+                                | #{d}
+                - }
+            .panel-footer
+                button.btn.btn-default set device

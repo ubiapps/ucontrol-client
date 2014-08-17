@@ -1,0 +1,17 @@
+extends layout
+
+block content
+    br
+    .alert.alert-success
+        | #{message.msg}
+        span.pull-right.countdown
+    script.
+        var countdown = #{message.timer};
+        $(function() {
+          setInterval(function() {
+            $(".countdown").html(countdown--);
+          },1000);
+          setTimeout(function() {
+            window.location.href = "#{message.redirect}";
+          },countdown*1000);
+        });

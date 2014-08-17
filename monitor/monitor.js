@@ -137,6 +137,8 @@ function onPacketReceived(timestamp, packet) {
         pendingFileCount++;
         pendingPacketCount = 0;
       }
+    } else {
+      logger.info("temperature not changed at: " + measuredTemp);
     }
   }
 }

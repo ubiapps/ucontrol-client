@@ -1,0 +1,14 @@
+extends layout
+
+block content
+    br
+
+    .alert.alert-warning
+        p Wait!
+        p Resetting this unit could cause loss of data and can't be un-done.
+        p Are you sure you want to reset this unit?
+
+    form(action="/resetConfirmed",method="POST")
+        input(type="hidden",name="check",value="xyz")
+        button.btn.btn-danger.btn-block(type="submit") RESET
+        a.btn.btn-default.btn-block(href="/") Cancel

@@ -1,0 +1,10 @@
+extends layout
+
+block content
+    br
+
+    .alert.alert-warning
+        p Are you sure you want to reboot this device?
+
+    a.btn.btn-danger.btn-block(href="/rebootConfirmed") REBOOT
+    a.btn.btn-default.btn-block(href="/") Cancel

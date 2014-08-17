@@ -83,12 +83,19 @@ function checkUpdate() {
 // Launch the monitor script using forever
 function startMonitor() {
   logger.info("starting monitor");
-
   shell.exec("forever -c node start monitor/monitor.js",function(code,output) {
     if (code === 0) {
       logger.info("monitor started ok");
     } else {
       logger.error("monitor failed to start with error code: " + code + " and output: " + output);
+    }
+  });
+  logger.info("starting admin UI");
+  shell.exec("forever -c node start configuration/setup.js",function(code,output) {
+    if (code === 0) {
+      logger.info("admin UI started ok");
+    } else {
+      logger.error("admin UI failed to start with error code: " + code + " and output: " + output);
     }
   });
 }

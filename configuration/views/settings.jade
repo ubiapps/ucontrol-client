@@ -1,0 +1,73 @@
+extends layout
+
+block content
+    br
+    - if (rebootRequired) {
+        .alert.alert-warning Reboot required. Changes to settings won't take effect until the unit is rebooted.
+    - }
+    .panel.panel-default
+        .panel-heading settings
+            a.btn.btn-default.pull-right(href="/")
+                span.glyphicon.glyphicon-refresh
+        .panel-body
+            p local system settings
+        table.table.table-striped
+            tr
+                th Version
+                td #{static.version}
+                    a.btn.btn-default.pull-right(href="/versionUpdate",style="width:80px") update
+            tr
+                th Unit id
+                td #{local.devKey || "<not set>"}
+                    a.btn.btn-default.pull-right(href="/resetDevice",style="width:80px") reset
+            tr
+                th Device code
+                td #{local.fs20Code || "<not set>"}
+                    a.btn.btn-default.pull-right(href="/changeDevice",style="width:80px") change
+            tr
+                th Session transmit (bytes)
+                td #{local.sessionTransmit}
+            tr
+                th Total transmit (bytes)
+                td #{local.totalTransmit}
+            tr
+                th Update fail count
+                td #{local.gitFailCount}
+            tr
+                th Packet threshold
+                td
+                    form(action="/setThreshold",method="POST")
+                        div.input-group
+                            input.form-control(type="text",value="#{static.pendingPacketThreshold}")
+                            span.input-group-btn
+                                button.btn.btn-default set
+            tr
+                th Admin web port
+                td
+                    form(action="/setWebPort",method="POST")
+                        div.input-group
+                            input.form-control(type="number",name="adminWebPort",value="#{local.adminWebPort || 3000}")
+                            span.input-group-btn
+                                button.btn.btn-default set
+            tr
+                th FS20 port
+                td
+                    form(action="/setPort",method="POST")
+                        div.input-group
+                            input.form-control(type="text",name="fs20Port",value="#{local.fs20Port}")
+                            span.input-group-btn
+                                button.btn.btn-default set
+
+    .panel.panel-default
+        .panel-heading api details
+        .panel-body
+            p configuration for access to uControl REST API
+        dl.dl-horizontal
+            dt Endpoint
+            dd #{static.server}
+            dt api username
+            dd #{static.user}
+            dt api password
+            dd #{static.pass}
+            dt api key
+            dd #{static["x-api-key"]}
