@@ -1,3 +1,5 @@
+"use strict";
+
 var fs = require("fs");
 var path = require("path");
 var config = require("../config.json");
@@ -38,4 +40,4 @@ module.exports = {
   get: load,
   getLocal: getLocal,
   setLocal: setLocal
-}
+};

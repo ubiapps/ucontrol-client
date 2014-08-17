@@ -6,15 +6,16 @@ var FS20 = require("./fs20/cul");
 var config = require("../common/config");
 var FHTAdapterClass = require("./fs20/fhtAdapter");
 var FS20DeviceClass = require("./fs20/fs20Device");
+var utils = require("../common/utils");
+utils.initialise("monitor");
+
+var logger = utils.logger;
 var pending = [];
 var pendingPacketCount = 0;
 var pendingFileCount = 0;
 var fhtMonitor = null;
 var fs20Device = null;
 var measuredTemp = 0.0;
-
-var logger = require("winston");
-logger.add(logger.transports.File, { filename: "client.log" });
 
 var requestLib = require("request");
 var request = requestLib.defaults({
@@ -33,6 +34,7 @@ var getFS20Port = function() {
 
 var startFHT = function() {
   if (fhtMonitor === null) {
+    logger.info("starting fht monitor");
     try {
       fs20Device = new FS20DeviceClass(config.getLocal("fs20Code"));
       fhtMonitor = new FS20(getFS20Port());
@@ -53,18 +55,37 @@ var createFolder = function(name) {
 };
 
 var initialise = function() {
-  // Check log folders.
+  // Schedule re-boot at midnight.
+  logger.info("scheduling reboot");
+  utils.scheduleReboot();
+
+  // Ensure log folders exist.
+  logger.info("checking log folders");
   createFolder("logs");
   createFolder("transmit");
   createFolder("pending");
 
+  // Clear pending folder.
+  logger.info("transmitting pending logs");
+  var pendingFiles = fs.readdirSync(path.join(__dirname,"pending"));
+  for (var i = 0, len = pendingFiles.length; i < len; i++) {
+    var pendingFile = pendingFiles[i];
+    fs.renameSync(path.join(__dirname,"pending",pendingFile),path.join(__dirname,"transmit", pendingFile));
+  }
+
+  // Reset transmission data count.
+  config.setLocal("sessionTransmit",0);
+
+  logger.info("checking device key");
   var devKey = config.getLocal("devKey","");
   if (devKey.length === 0) {
+    logger.info("registering device");
     request.post(config.get().server + "/register", { json: {} }, function(err,resp,body) {
       if (err !== null || body.id.length === 0) {
         logger.error("failed to register with server: " + JSON.stringify(err));
         setTimeout(initialise,config.get().networkErrorRebootTime);
       } else {
+        logger.info("got device key: " + body.id);
         config.setLocal("devKey",body.id);
         startFHT();
       }
@@ -87,6 +108,7 @@ function onPacketReceived(timestamp, packet) {
     adapter.applyTo(fs20Device);
 
     if (measuredTemp !== fs20Device.getData("measuredTemp")) {
+      logger.info("temp changed from: " + measuredTemp + " to " + fs20Device.getData("measuredTemp"));
       measuredTemp = fs20Device.getData("measuredTemp");
 
       // Add packet to pending file
@@ -96,6 +118,7 @@ function onPacketReceived(timestamp, packet) {
       pendingPacketCount++;
 
       if (pendingPacketCount === config.get().pendingPacketThreshold) {
+        logger.info("reached packet threshold - moving to transmit");
         fs.renameSync(pendingFile,path.join(__dirname,'transmit/' + pendingFileCount + '.log'));
         pendingFileCount++;
         pendingPacketCount = 0;
@@ -104,10 +127,18 @@ function onPacketReceived(timestamp, packet) {
   }
 }
 
+function updateTransmitTotals(count) {
+  var totalTransmit = config.getLocal("totalTransmit",0);
+  config.setLocal("totalTransmit",totalTransmit + count);
+  var afterStart = config.getLocal("sessionTransmit",0);
+  config.setLocal("sessionTransmit",afterStart + count);
+}
+
 function doTransmit(files,index,cb) {
   var file = files[index];
   var transmitData = fs.readFileSync(file).toString();
-
+  var transmitLength = transmitData.length;
+  logger.info("transmitting file: " + file + ", " + transmitLength + " bytes");
   request.post(config.get().server + "/data/" + config.getLocal("devKey"), { json: { data: transmitData }}, function(err,resp,body) {
     if (err !== null) {
       logger.error("failed to post data to server: " + JSON.stringify(err));
@@ -129,9 +160,11 @@ function doTransmit(files,index,cb) {
 }
 
 function transmitData() {
+  logger.info("checking files for transmit");
   var transmitDir = path.join(__dirname,'transmit');
   var transmitFiles = fs.readdirSync(transmitDir).map(function(f) { return path.join(transmitDir,f); });
   if (transmitFiles.length > 0) {
+    logger.info("transmitting " + transmitFiles.length + " files");
     doTransmit(transmitFiles,0,function() {
       setTimeout(transmitData,config.get().transmitFrequency);
     });
@@ -142,4 +175,3 @@ function transmitData() {
 }
 
 initialise();
-

@@ -1,48 +1,25 @@
 "use strict";
 
-var config = require("../common/config.js");
+var config = require("../common/config");
 var shell = require("shelljs");
-var logger = require("winston");
-logger.add(logger.transports.File, { filename: "bootstrap.log" });
-
-// Reboot after the given time interval.
-function setReboot(timeout) {
-
-  var elapse;
-  // If no timeout given default to midnight.
-  if (typeof timeout === "undefined") {
-    var midnight = new Date();
-    midnight.setUTCHours(24,0,0,0);
-    elapse = midnight.getTime() - Date.now();
-  } else {
-    elapse = timeout;
-  }
-
-  var reboot = function() {
-    logger.info("rebooting....");
-    shell.exec("sudo reboot");
-  }
-
-  logger.info("requesting reboot in " + elapse + " msec");
-
-  setTimeout(reboot,elapse);
-}
+var utils = require("../common/utils");
+utils.initialise("boot");
+var logger = utils.logger;
 
 // Executes npm install
 function installUpdate() {
   logger.info("installing update");
 
-  shell.exec("/usr/local/bin/npm install", function(code, output) {
+  shell.exec("npm install", function(code, output) {
     if (code === 0) {
       logger.info("update installed");
       config.setLocal("npmFailCount",0);
-      shell.exec("reboot");
+      utils.scheduleReboot(0);
     } else {
       logger.error("npm install failed");
       config.setLocal("npmFailCount", config.getLocal("npmFailCount",0) + 1);
-
       // Could be network error?
-      setReboot(config.get().networkErrorRebootTime);
+      utils.scheduleReboot(config.get().networkErrorRebootTime);
     }
   });
 }
@@ -65,7 +42,7 @@ function checkUpdate() {
     logger.error("git " + cmd + " command failed");
     config.setLocal("gitFailCount",config.getLocal("gitFailCount",0) + 1);
     // Now what? Could be network error?
-    setReboot(config.get().networkErrorRebootTime);
+    utils.scheduleReboot(config.get().networkErrorRebootTime);
   };
 
   shell.exec("git fetch -v origin " + config.get().remoteBranch + ":refs/remotes/origin/" + config.get().remoteBranch, function(code,output) {
@@ -107,7 +84,7 @@ function checkUpdate() {
 function startMonitor() {
   logger.info("starting monitor");
 
-  shell.exec("/usr/local/bin/forever -c node start monitor/monitor.js",function(code,output) {
+  shell.exec("forever -c node start monitor/monitor.js",function(code,output) {
     if (code === 0) {
       logger.info("monitor started ok");
     } else {
@@ -119,4 +96,3 @@ function startMonitor() {
 logger.info("ucontrol booting...");
 setWorkingDirectory();
 checkUpdate();
-setReboot();
