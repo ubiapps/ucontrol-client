@@ -137,8 +137,8 @@ function updateTransmitTotals(count) {
 function doTransmit(files,index,cb) {
   var file = files[index];
   var transmitData = fs.readFileSync(file).toString();
-  var transmitLength = transmitData.length;
-  logger.info("transmitting file: " + file + ", " + transmitLength + " bytes");
+  updateTransmitTotals(transmitData.length);
+  logger.info("transmitting file: " + file + ", " + transmitData.length + " bytes");
   request.post(config.get().server + "/data/" + config.getLocal("devKey"), { json: { data: transmitData }}, function(err,resp,body) {
     if (err !== null) {
       logger.error("failed to post data to server: " + JSON.stringify(err));
