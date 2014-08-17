@@ -76,6 +76,9 @@ var initialise = function() {
   // Reset transmission data count.
   config.setLocal("sessionTransmit",0);
 
+  // Reset seen device list.
+  config.setLocal("seenDevices",{});
+
   logger.info("checking device key");
   var devKey = config.getLocal("devKey","");
   if (devKey.length === 0) {
@@ -95,6 +98,14 @@ var initialise = function() {
   }
 };
 
+function deviceSeen(devCode) {
+  var seen = config.getLocal("seenDevices",{});
+  if (!seen.hasOwnProperty(devCode)) {
+    seen[devCode] = true;
+    config.setLocal("seenDevices",seen);
+  }
+}
+
 function onPacketReceived(timestamp, packet) {
   // Received a new packet - store it.
   var packetDate = new Date(timestamp);
@@ -104,7 +115,10 @@ function onPacketReceived(timestamp, packet) {
   fs.appendFileSync(logFile,timestamp + " " + packet.toString() + "\n");
 
   var adapter = new FHTAdapterClass(packet);
-  if (adapter.getDeviceCode().toLowerCase() === config.getLocal("fs20Code").toLowerCase()) {
+  var deviceCode = adapter.getDeviceCode().toUpperCase();
+  deviceSeen(deviceCode);
+
+  if (deviceCode === config.getLocal("fs20Code").toUpperCase()) {
     adapter.applyTo(fs20Device);
 
     if (measuredTemp !== fs20Device.getData("measuredTemp")) {

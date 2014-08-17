@@ -10,7 +10,7 @@ var logger = utils.logger;
 function installUpdate() {
   logger.info("installing update");
 
-  shell.exec("npm install", function(code, output) {
+  shell.exec("npm install --loglevel verbose", function(code, output) {
     if (code === 0) {
       logger.info("update installed");
       config.setLocal("npmFailCount",0);
