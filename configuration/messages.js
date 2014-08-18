@@ -22,7 +22,7 @@ var messages = {
   rebooting: {
     msg: "The device will now reboot",
     redirect: "/",
-    timer: 100
+    timer: 200
   },
   deviceSet: {
     msg: "Device set successfully",
@@ -35,7 +35,7 @@ var messages = {
     timer: 5
   },
   versionUpdate: {
-    msg: "Software update scheduled for next reboot",
+    msg: "Software update check scheduled for next reboot",
     redirect: "/",
     timer: 5
   }

@@ -99,6 +99,6 @@ app.get("/resetDevice", function(req,res) {
   res.render("resetConfirm");
 });
 
-var server = app.listen(config.getLocal("adminWebPort",3000), function() {
+var server = app.listen(config.getLocal("adminWebPort",80), function() {
   console.log('Listening on port %d', server.address().port);
 });

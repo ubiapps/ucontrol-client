@@ -34,11 +34,11 @@ block content
                 th Update fail count
                 td #{local.gitFailCount}
             tr
-                th Packet threshold
+                th FS20 port
                 td
-                    form(action="/setThreshold",method="POST")
+                    form(action="/setPort",method="POST")
                         div.input-group
-                            input.form-control(type="text",value="#{static.pendingPacketThreshold}")
+                            input.form-control(type="text",name="fs20Port",value="#{local.fs20Port}")
                             span.input-group-btn
                                 button.btn.btn-default set
             tr
@@ -46,15 +46,15 @@ block content
                 td
                     form(action="/setWebPort",method="POST")
                         div.input-group
-                            input.form-control(type="number",name="adminWebPort",value="#{local.adminWebPort || 3000}")
+                            input.form-control(type="number",name="adminWebPort",value="#{local.adminWebPort || 80}")
                             span.input-group-btn
                                 button.btn.btn-default set
             tr
-                th FS20 port
+                th Packet threshold
                 td
-                    form(action="/setPort",method="POST")
+                    form(action="/setThreshold",method="POST")
                         div.input-group
-                            input.form-control(type="text",name="fs20Port",value="#{local.fs20Port}")
+                            input.form-control(type="text",value="#{static.pendingPacketThreshold}")
                             span.input-group-btn
                                 button.btn.btn-default set
 
