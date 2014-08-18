@@ -21,7 +21,7 @@ var loadLocal = function() {
       localConfig = {};
     }
   } else {
-    utils.logger.error("config file missing!");
+    utils.logger.error("config file missing - creating new");
     localConfig = {};
   }
   return localConfig;
