@@ -31,22 +31,30 @@
   };
 
   culPacket.prototype.load = function(buffer) {
+    var loaded = false;
+
     this.packet = [];
 
-    // Start byte.
-    this.packet.push(buffer[0].charCodeAt(0));
-    this.headerLength = 1;
+    if (buffer.length > 0) {
+      // Start byte.
+      this.packet.push(buffer[0].charCodeAt(0));
+      this.headerLength = 1;
 
-    var bytes = [];
-    for (var i = 1; i < buffer.length; i++) {
-      bytes.push(buffer[i]);
+      var bytes = [];
+      for (var i = 1; i < buffer.length; i++) {
+        bytes.push(buffer[i]);
 
-      // Convert raw bytes to hex
-      if (bytes.length == 2) {
-        this.packet.push((parseInt(bytes[0],16) << 4) + parseInt(bytes[1],16));
-        bytes = [];
+        // Convert raw bytes to hex
+        if (bytes.length == 2) {
+          this.packet.push((parseInt(bytes[0],16) << 4) + parseInt(bytes[1],16));
+          bytes = [];
+        }
       }
+
+      loaded = true;
     }
+
+    return loaded;
   };
 
   culPacket.prototype.getHeader = function() {

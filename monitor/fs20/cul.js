@@ -72,13 +72,15 @@
   };
   
   cul.prototype.receivePacket = function(data) {
-    this.packet.load(data);
     console.log("---------------------------------------------");
-    var packetString = this.packet.toString();
-    console.log(packetString);
+    if (this.packet.load(data)) {
+      var packetString = this.packet.toString();
+      console.log(packetString);
 
-    this.emit(cul.PACKET_EVENT,(new Date()).getTime(), this.packet);
-
+      this.emit(cul.PACKET_EVENT,(new Date()).getTime(), this.packet);
+    } else {
+      console.log("empty packet!");
+    }
     console.log("---------------------------------------------");
   };
   
