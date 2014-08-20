@@ -29,7 +29,17 @@
   var ACTUATOR_SYNCING = 12;
   var ACTUATOR_TEST = 14;
   var ACTUATOR_PAIRING = 15;
-      
+
+  function zeroFill( number, width )
+  {
+    width -= number.toString().length;
+    if ( width > 0 )
+    {
+      return new Array( width + (/\./.test( number ) ? 2 : 1) ).join( '0' ) + number;
+    }
+    return number + ""; // always return a string
+  }
+
   // Constructor
   function fhtAdapter(packet) {
     this.packet = packet;
@@ -91,9 +101,9 @@
     if (typeof c1 !== "undefined") {
       var c2 = this.packet.get(DEVICE_INDEX+1);
       if (typeof c2 !== "undefined") {
-        deviceCode = this.packet.getHeader() + c1.toString(16) + c2.toString(16);
+        deviceCode = this.packet.getHeader() + zeroFill(c1.toString(16),2) + zeroFill(c2.toString(16),2);
       } else {
-        deviceCode = this.packet.getHeader() + c1.toString(16);
+        deviceCode = this.packet.getHeader() + zeroFill(c1.toString(16),2);
       }
     } else {
       deviceCode = this.packet.getHeader();
