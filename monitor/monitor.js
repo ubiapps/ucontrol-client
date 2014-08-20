@@ -32,6 +32,14 @@ var getFS20Port = function() {
   return config.getLocal("fs20Port","/dev/ttyAMA0");
 };
 
+var initDevice = function() {
+  // Send temperature set point request.
+  var deviceCode = config.getLocal("fs20Code","");
+  if (deviceCode.length > 0) {
+    fhtMonitor.writeFHT(deviceCode + "41" + "0034");
+  }
+};
+
 var startFHT = function() {
   if (fhtMonitor === null) {
     logger.info("starting fht monitor");
@@ -41,6 +49,7 @@ var startFHT = function() {
       fhtMonitor.on("packet", onPacketReceived);
       fhtMonitor.start();
       setTimeout(transmitData,config.get().transmitFrequency);
+      setTimeout(initDevice,10000);
     } catch (e) {
       logger.error("failed to open transceiver port: " + getFS20Port() + " error is: " + JSON.stringify(e));
     }
