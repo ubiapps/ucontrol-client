@@ -86,7 +86,19 @@
   }
     
   fhtAdapter.prototype.getDeviceCode = function() {
-    return this.packet.getHeader() + this.packet.get(DEVICE_INDEX).toString(16) + this.packet.get(DEVICE_INDEX+1).toString(16);
+    var deviceCode;
+    var c1 = this.packet.get(DEVICE_INDEX);
+    if (typeof c1 !== "undefined") {
+      var c2 = this.packet.get(DEVICE_INDEX+1);
+      if (typeof c2 !== "undefined") {
+        deviceCode = this.packet.getHeader() + c1.toString(16) + c2.toString(16);
+      } else {
+        deviceCode = this.packet.getHeader() + c1.toString(16);
+      }
+    } else {
+      deviceCode = this.packet.getHeader();
+    }
+    return deviceCode;
   }
   
   fhtAdapter.prototype.hasValvePosition = function() {

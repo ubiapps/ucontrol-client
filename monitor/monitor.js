@@ -118,7 +118,7 @@ function onPacketReceived(timestamp, packet) {
   var deviceCode = adapter.getDeviceCode().toUpperCase();
   deviceSeen(deviceCode);
 
-  if (deviceCode === config.getLocal("fs20Code").toUpperCase()) {
+  if (deviceCode === config.getLocal("fs20Code","").toUpperCase()) {
     adapter.applyTo(fs20Device);
 
     if (measuredTemp !== fs20Device.getData("measuredTemp")) {
