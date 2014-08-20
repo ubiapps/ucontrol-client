@@ -83,7 +83,7 @@ function checkUpdate() {
 // Launch the monitor script using forever
 function startMonitor() {
   logger.info("starting monitor");
-  shell.exec("forever -c node start monitor/monitor.js",function(code,output) {
+  shell.exec("forever -c node start -l monitorForever.log -o monitorOut.log -e monitorError.log monitor/monitor.js",function(code,output) {
     if (code === 0) {
       logger.info("monitor started ok");
     } else {
@@ -91,7 +91,7 @@ function startMonitor() {
     }
   });
   logger.info("starting admin UI");
-  shell.exec("forever -c node start configuration/setup.js",function(code,output) {
+  shell.exec("forever -c node start -l configForever.log -o configOut.log -e configError.log configuration/setup.js",function(code,output) {
     if (code === 0) {
       logger.info("admin UI started ok");
     } else {
