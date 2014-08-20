@@ -42,7 +42,8 @@ function checkUpdate() {
     logger.error("git " + cmd + " command failed");
     config.setLocal("gitFailCount",config.getLocal("gitFailCount",0) + 1);
     // Now what? Could be network error?
-    utils.scheduleReboot(config.get().networkErrorRebootTime);
+    //utils.scheduleReboot(config.get().networkErrorRebootTime);
+    startMonitor();
   };
 
   shell.exec("git fetch -v origin " + config.get().remoteBranch + ":refs/remotes/origin/" + config.get().remoteBranch, function(code,output) {
