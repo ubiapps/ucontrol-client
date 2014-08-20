@@ -121,6 +121,8 @@ function onPacketReceived(timestamp, packet) {
   if (deviceCode === config.getLocal("fs20Code","").toUpperCase()) {
     adapter.applyTo(fs20Device);
 
+    logger.info("received data: " + adapter.toString());
+
     if (measuredTemp !== fs20Device.getData("measuredTemp")) {
       logger.info("temp changed from: " + measuredTemp + " to " + fs20Device.getData("measuredTemp"));
       measuredTemp = fs20Device.getData("measuredTemp");
