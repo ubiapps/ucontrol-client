@@ -36,7 +36,7 @@ var initDevice = function() {
   // Send temperature set point request.
   var deviceCode = config.getLocal("fs20Code","");
   if (deviceCode.length > 0) {
-    var msg = deviceCode + "0041" + "0024";
+    var msg = deviceCode + "41" + "0024";
     logger.info("set point on " + deviceCode + " : " + msg);
     fhtMonitor.writeFHT(msg);
   }
@@ -126,10 +126,10 @@ function onPacketReceived(timestamp, packet) {
   fs.appendFileSync(logFile,timestamp + " " + packet.toString() + "\n");
 
   var adapter = new FHTAdapterClass(packet);
-  var deviceCode = adapter.getDeviceCode().toUpperCase();
+  var deviceCode = adapter.getDeviceCode().toLowerCase();
   deviceSeen(deviceCode);
 
-  if (deviceCode === config.getLocal("fs20Code","").toUpperCase()) {
+  if (deviceCode === config.getLocal("fs20Code","").toLowerCase()) {
     adapter.applyTo(fs20Device);
 
     logger.info("received data: " + adapter.toString());

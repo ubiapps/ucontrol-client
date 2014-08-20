@@ -48,7 +48,7 @@ app.post("/setDevice", function(req, res) {
   if (devCode.length !== 5) {
     res.redirect("failed/invalidDeviceCode");
   } else {
-    config.setLocal("fs20Code",devCode.toUpperCase());
+    config.setLocal("fs20Code",devCode.toLowerCase());
     rebootRequired = true;
     res.redirect("success/deviceSet");
   }
