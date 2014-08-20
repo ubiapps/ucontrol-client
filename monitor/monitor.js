@@ -36,7 +36,7 @@ var initDevice = function() {
   // Send temperature set point request.
   var deviceCode = config.getLocal("fs20Code","");
   if (deviceCode.length > 0) {
-    var msg = deviceCode + "41" + "0024";
+    var msg = deviceCode + "0041" + "0024";
     logger.info("set point on " + deviceCode + " : " + msg);
     fhtMonitor.writeFHT(msg);
   }
