@@ -89,7 +89,7 @@
   };
   
   cul.prototype.writeFHT = function(pkt) {
-    this.serialPort.write("T" + pkt + delimiter);
+    this.serialPort.write("T" + pkt.toLowerCase() + delimiter);
   };
 
   module.exports = cul;
