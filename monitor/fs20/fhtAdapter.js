@@ -76,7 +76,8 @@
         break;
       case MEASURED_TEMP_LOW:
         fht.setData("lowTemp", this.packet.get(PARAM_INDEX));
-        fht.setData("measuredTemp", (fht.getData("highTemp") * 256 + fht.getData("lowTemp"))/10);
+        // Only set measuredTemp on receipt of high-temp portion (low-temp is always followed immediately by high-temp).
+        //fht.setData("measuredTemp", (fht.getData("highTemp") * 256 + fht.getData("lowTemp"))/10);
         break;
       case MEASURED_TEMP_HIGH:
         fht.setData("highTemp",this.packet.get(PARAM_INDEX));
