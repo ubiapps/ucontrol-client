@@ -48,7 +48,7 @@
   fhtAdapter.APPLY_TO_WRONG_DEVICE = -1;
   
   fhtAdapter.prototype.applyTo = function(fht) {
-    if (fht.device && fht.device.length > 0 && this.getDeviceCode() !== fht.device) {
+    if (fht.device && fht.device.length > 0 && this.getDeviceCode().toLowerCase() !== fht.device.toLowerCase()) {
       return fhtAdapter.APPLY_TO_WRONG_DEVICE;
     }
     
