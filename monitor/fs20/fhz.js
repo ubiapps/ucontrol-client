@@ -53,7 +53,7 @@
     if (ok) {
       console.log("---------------------------------------------");
       console.log(this.packet.toString());
-      this.emit(fhz.PACKET_EVENT,(new Date()).getTime(), this.packet);
+      this.emit(fhz.PACKET_EVENT,Date.now(),this.packet);
       console.log("---------------------------------------------");
     } else { 
       console.log("packet invalid");
