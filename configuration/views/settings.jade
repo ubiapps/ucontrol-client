@@ -17,6 +17,18 @@ block content
                 td #{static.version}
                     a.btn.btn-default.pull-right(href="/versionUpdate",style="width:80px") update
             tr
+                th Unit name
+                td
+                    - if (local.name && local.name.length > 0) {
+                        | #{local.name}
+                    - } else {
+                        form(action="/setName",method="POST")
+                            div.input-group
+                                input.form-control(type="text",name="unitName",value="#{local.name || ''}",placeholder="enter name")
+                                span.input-group-btn
+                                    button.btn.btn-default set
+                - }
+            tr
                 th Unit id
                 td #{local.devKey || "<not set>"}
                     a.btn.btn-default.pull-right(href="/resetDevice",style="width:80px") reset

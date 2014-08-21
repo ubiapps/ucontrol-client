@@ -7,5 +7,6 @@
   "pass": "sppaibu",
   "transmitFrequency": 10000,
   "remoteBranch": "dist-001",
-  "pendingPacketThreshold": 1
+  "pendingPacketThreshold": 1,
+  "registrationFrequency": 30000
 }

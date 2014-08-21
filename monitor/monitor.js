@@ -65,6 +65,34 @@ var createFolder = function(name) {
   fs.mkdir(folderPath);
 };
 
+var checkRegistration = function() {
+  logger.info("checking device key");
+  var devKey = config.getLocal("devKey","");
+  if (devKey.length === 0) {
+    logger.info("no device key, checking name");
+    var devName = config.getLocal("name","");
+    if (devName.length > 0) {
+      logger.info("got device name, registering device: " + devName);
+      request.post(config.get().server + "/register", { json: { name: devName } }, function(err,resp,body) {
+        if (err !== null || body.id.length === 0) {
+          logger.error("failed to register with server: " + JSON.stringify(err));
+          setTimeout(checkRegistration,config.get().registrationFrequency);
+        } else {
+          logger.info("got device key: " + body.id);
+          config.setLocal("devKey",body.id);
+          startFHT();
+        }
+      });
+    } else {
+      logger.info("waiting for device name");
+      setTimeout(checkRegistration,config.get().registrationFrequency);
+    }
+  } else {
+    logger.info("device registered, starting monitor");
+    startFHT();
+  }
+};
+
 var initialise = function() {
   // Schedule re-boot at midnight.
   logger.info("scheduling reboot");
@@ -90,23 +118,7 @@ var initialise = function() {
   // Reset seen device list.
   config.setLocal("seenDevices",{});
 
-  logger.info("checking device key");
-  var devKey = config.getLocal("devKey","");
-  if (devKey.length === 0) {
-    logger.info("registering device");
-    request.post(config.get().server + "/register", { json: {} }, function(err,resp,body) {
-      if (err !== null || body.id.length === 0) {
-        logger.error("failed to register with server: " + JSON.stringify(err));
-        setTimeout(initialise,config.get().networkErrorRebootTime);
-      } else {
-        logger.info("got device key: " + body.id);
-        config.setLocal("devKey",body.id);
-        startFHT();
-      }
-    });
-  } else {
-    startFHT();
-  }
+  checkRegistration();
 };
 
 function deviceSeen(devCode) {

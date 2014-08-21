@@ -43,6 +43,17 @@ app.get("/failed/:id", function(req,res) {
   res.render("failed", { message: msg });
 });
 
+app.post("/setName", function(req, res) {
+  var name = req.body.unitName;
+  if (name.length > 0 && name.length < 100) {
+    config.setLocal("name",name);
+    rebootRequired = true;
+    res.redirect("success/nameSaved");
+  } else {
+    res.redirect("failed/invalidName");
+  }
+});
+
 app.post("/setDevice", function(req, res) {
   var devCode = req.body.devices;
   if (devCode.length !== 5) {

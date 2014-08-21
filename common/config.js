@@ -57,6 +57,7 @@ var resetLocal = function() {
   localConfig.seenDevices = {};
   delete localConfig.fs20Code;
   delete localConfig.devKey;
+  delete localConfig.name;
 
   saveLocal();
 };

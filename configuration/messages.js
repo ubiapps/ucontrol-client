@@ -38,6 +38,16 @@ var messages = {
     msg: "Software update check scheduled for next reboot",
     redirect: "/",
     timer: 5
+  },
+  nameSaved: {
+    msg: "name saved successfully",
+    redirect: "/",
+    timer: 5
+  },
+  invalidName: {
+    msg: "invalid name",
+    redirect: "/",
+    timer: 5
   }
 };
 
