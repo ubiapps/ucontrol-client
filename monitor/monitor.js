@@ -4,7 +4,6 @@ var fs = require("fs");
 var path = require("path");
 var FS20 = require("./fs20/cul");
 var config = require("../common/config");
-var FHTAdapterClass = require("./fs20/fhtAdapter");
 var FS20DeviceClass = require("./fs20/fs20Device");
 var utils = require("../common/utils");
 utils.initialise("monitor");
@@ -137,7 +136,7 @@ function onPacketReceived(timestamp, packet) {
   var logFile = path.join(__dirname,'logs/fhz-' + packetDate.getUTCDate() + '-' + packetDate.getUTCMonth() + '-' + packetDate.getUTCFullYear() + '.log');
   fs.appendFileSync(logFile,timestamp + " " + packet.toString() + "\n");
 
-  var adapter = new FHTAdapterClass(packet);
+  var adapter = fhtMonitor.getAdapter(packet);
   var deviceCode = adapter.getDeviceCode().toLowerCase();
   deviceSeen(deviceCode);
 
