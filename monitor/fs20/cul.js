@@ -34,6 +34,9 @@
         var emAdapter = require("./emAdapter");
         adapter = new emAdapter(packet);
         break;
+      case "K":
+        var ashAdapter = require("./ashAdapter");
+        adapter = new ashAdapter(packet);
       default:
         break;
     }

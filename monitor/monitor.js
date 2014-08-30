@@ -146,9 +146,9 @@ function onPacketReceived(timestamp, packet) {
 
     logger.info("received data: " + adapter.toString());
 
-    if (measuredTemp !== fs20Device.getData("measuredTemp")) {
-      logger.info("temp changed from: " + measuredTemp + " to " + fs20Device.getData("measuredTemp"));
-      measuredTemp = fs20Device.getData("measuredTemp");
+    if (measuredTemp !== fs20Device.getData("temperature")) {
+      logger.info("temp changed from: " + measuredTemp + " to " + fs20Device.getData("temperature"));
+      measuredTemp = fs20Device.getData("temperature");
 
       // Add packet to pending file
       var pendingFile = path.join(__dirname,'pending/' + pendingFileCount + '.log');

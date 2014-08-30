@@ -6,6 +6,16 @@
   var INTERVAL_INDEX = 5;
   var PEAK_INDEX = 7;
 
+  function zeroFill( number, width )
+  {
+    width -= number.toString().length;
+    if ( width > 0 )
+    {
+      return new Array( width + (/\./.test( number ) ? 2 : 1) ).join( '0' ) + number;
+    }
+    return number + ""; // always return a string
+  }
+
   // Constructor
   function emAdapter(packet) {
     this.packet = packet;
@@ -41,7 +51,19 @@
   }
     
   emAdapter.prototype.getDeviceCode = function() {
-    return this.packet.getHeader() + this.packet.get(DEVICE_INDEX).toString(16) + this.packet.get(DEVICE_INDEX+1).toString(16);
+    var deviceCode;
+    var c1 = this.packet.get(DEVICE_INDEX);
+    if (typeof c1 !== "undefined") {
+      var c2 = this.packet.get(DEVICE_INDEX+1);
+      if (typeof c2 !== "undefined") {
+        deviceCode = this.packet.getHeader() + zeroFill(c1.toString(16),2) + zeroFill(c2.toString(16),2);
+      } else {
+        deviceCode = this.packet.getHeader() + zeroFill(c1.toString(16),2);
+      }
+    } else {
+      deviceCode = this.packet.getHeader();
+    }
+    return deviceCode;
   };
 
   emAdapter.prototype.toString = function() {
