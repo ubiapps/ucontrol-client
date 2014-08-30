@@ -12,7 +12,7 @@
   ashAdapter.APPLY_TO_WRONG_DEVICE = -1;
   
   ashAdapter.prototype.applyTo = function(ash) {
-    if (ash.device && ash.device.length > 0 && this.getDeviceCode() !== ash.device) {
+    if (ash.device && ash.device.length > 0 && this.getDeviceCode().toLowerCase() !== ash.device.toLowerCase()) {
       return ashAdapter.APPLY_TO_WRONG_DEVICE;
     }
     

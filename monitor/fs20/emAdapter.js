@@ -16,7 +16,7 @@
   emAdapter.APPLY_TO_WRONG_DEVICE = -1;
   
   emAdapter.prototype.applyTo = function(em) {
-    if (em.device && em.device.length > 0 && this.getDeviceCode() !== em.device) {
+    if (em.device && em.device.length > 0 && this.getDeviceCode().toLowerCase() !== em.device.toLowerCase()) {
       return emAdapter.APPLY_TO_WRONG_DEVICE;
     }
     
