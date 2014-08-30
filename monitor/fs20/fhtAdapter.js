@@ -1,4 +1,6 @@
 (function () {
+  var zeroFill = require("./zeroFill");
+
   // Offsets of FHT data in packet data
   var DEVICE_INDEX = 0;     // Device code 1
   var DEVICE_INDEX_2 = 1;   // Device code 2
@@ -29,16 +31,6 @@
   var ACTUATOR_SYNCING = 12;
   var ACTUATOR_TEST = 14;
   var ACTUATOR_PAIRING = 15;
-
-  function zeroFill( number, width )
-  {
-    width -= number.toString().length;
-    if ( width > 0 )
-    {
-      return new Array( width + (/\./.test( number ) ? 2 : 1) ).join( '0' ) + number;
-    }
-    return number + ""; // always return a string
-  }
 
   // Constructor
   function fhtAdapter(packet) {

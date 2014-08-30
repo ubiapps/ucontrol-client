@@ -1,4 +1,6 @@
 (function () {
+  var zeroFill = require("./zeroFill");
+
   // Offsets of ASH data in packet data
   var DEVICE_INDEX = 0;     // Device code
 
@@ -24,7 +26,7 @@
   }
     
   ashAdapter.prototype.getDeviceCode = function() {
-    return this.packet.getHeader() + this.packet.get(DEVICE_INDEX).toString(16);
+    return this.packet.getHeader() + zeroFill(this.packet.get(DEVICE_INDEX).toString(16),2);
   };
 
   var parse = function() {
