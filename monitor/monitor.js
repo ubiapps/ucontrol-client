@@ -137,32 +137,34 @@ function onPacketReceived(timestamp, packet) {
   fs.appendFileSync(logFile,timestamp + " " + packet.toString() + "\n");
 
   var adapter = fhtMonitor.getAdapter(packet);
-  var deviceCode = adapter.getDeviceCode().toLowerCase();
-  deviceSeen(deviceCode);
+  if (typeof adapter !== "undefined") {
+    var deviceCode = adapter.getDeviceCode().toLowerCase();
+    deviceSeen(deviceCode);
 
-  if (deviceCode === config.getLocal("fs20Code","").toLowerCase()) {
-    adapter.applyTo(fs20Device);
+    if (deviceCode === config.getLocal("fs20Code","").toLowerCase()) {
+      adapter.applyTo(fs20Device);
 
-    logger.info("received data: " + adapter.toString());
+      logger.info("received data: " + adapter.toString());
 
-    if (measuredTemp !== fs20Device.getData("temperature")) {
-      logger.info("temp changed from: " + measuredTemp + " to " + fs20Device.getData("temperature"));
-      measuredTemp = fs20Device.getData("temperature");
+      if (measuredTemp !== fs20Device.getData("temperature")) {
+        logger.info("temp changed from: " + measuredTemp + " to " + fs20Device.getData("temperature"));
+        measuredTemp = fs20Device.getData("temperature");
 
-      // Add packet to pending file
-      var pendingFile = path.join(__dirname,'pending/' + pendingFileCount + '.log');
-      fs.appendFileSync(pendingFile,timestamp + " " + measuredTemp + "\n");
+        // Add packet to pending file
+        var pendingFile = path.join(__dirname,'pending/' + pendingFileCount + '.log');
+        fs.appendFileSync(pendingFile,timestamp + " " + measuredTemp + "\n");
 
-      pendingPacketCount++;
+        pendingPacketCount++;
 
-      if (pendingPacketCount === config.get().pendingPacketThreshold) {
-        logger.info("reached packet threshold - moving to transmit");
-        fs.renameSync(pendingFile,path.join(__dirname,'transmit/' + pendingFileCount + '.log'));
-        pendingFileCount++;
-        pendingPacketCount = 0;
+        if (pendingPacketCount === config.get().pendingPacketThreshold) {
+          logger.info("reached packet threshold - moving to transmit");
+          fs.renameSync(pendingFile,path.join(__dirname,'transmit/' + pendingFileCount + '.log'));
+          pendingFileCount++;
+          pendingPacketCount = 0;
+        }
+      } else {
+        logger.info("temperature not changed at: " + measuredTemp);
       }
-    } else {
-      logger.info("temperature not changed at: " + measuredTemp);
     }
   }
 }
