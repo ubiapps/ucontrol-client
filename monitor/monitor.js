@@ -100,13 +100,7 @@ var initialise = function() {
   createFolder("transmit");
   createFolder("pending");
 
-  // Clear pending folder.
-  logger.info("transmitting pending logs");
-  var pendingFiles = fs.readdirSync(path.join(__dirname,"pending"));
-  for (var i = 0, len = pendingFiles.length; i < len; i++) {
-    var pendingFile = pendingFiles[i];
-    pendingToTransmit(pendingFile);
-  }
+  moveAllPendingFiles();
 
   findNextPendingFile();
 
@@ -135,6 +129,16 @@ function findNextPendingFile() {
   } while(fs.existsSync(pendingFile));
 
   return pendingFile;
+}
+
+function moveAllPendingFiles() {
+  // Clear pending folder.
+  logger.info("transmitting pending logs");
+  var pendingFiles = fs.readdirSync(path.join(__dirname,"pending"));
+  for (var i = 0, len = pendingFiles.length; i < len; i++) {
+    var pendingFile = pendingFiles[i];
+    pendingToTransmit(pendingFile);
+  }
 }
 
 function pendingToTransmit(file) {
@@ -181,7 +185,7 @@ function onPacketReceived(timestamp, packet) {
 
         if (pendingPacketCount === config.get().pendingPacketThreshold) {
           logger.info("reached packet threshold - moving to transmit");
-          pendingToTransmit(pendingFile);
+          moveAllPendingFiles();
           findNextPendingFile();
           pendingPacketCount = 0;
         }
