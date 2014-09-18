@@ -54,7 +54,11 @@ var startFHT = function() {
 
 var createFolder = function(name) {
   var folderPath = path.join(__dirname,name);
-  fs.mkdir(folderPath);
+  try {
+    fs.mkdir(folderPath);
+  } catch (e) {
+    // Probably because folder already exists - do nothing.
+  }
 };
 
 var checkRegistration = function() {
@@ -101,8 +105,14 @@ var initialise = function() {
   var pendingFiles = fs.readdirSync(path.join(__dirname,"pending"));
   for (var i = 0, len = pendingFiles.length; i < len; i++) {
     var pendingFile = pendingFiles[i];
-    fs.renameSync(path.join(__dirname,"pending",pendingFile),path.join(__dirname,"transmit", pendingFile));
+    try {
+      fs.renameSync(path.join(__dirname,"pending",pendingFile),path.join(__dirname,"transmit", pendingFile));
+    } catch (e) {
+      logger.error("failed to move pending file to transmit");
+    }
   }
+
+  findNextPendingFile();
 
   // Reset transmission data count.
   config.setLocal("sessionTransmit",0);
@@ -119,6 +129,16 @@ function deviceSeen(devCode) {
     seen[devCode] = true;
     config.setLocal("seenDevices",seen);
   }
+}
+
+function findNextPendingFile() {
+  var pendingFile;
+  do {
+    pendingFileCount++;
+    pendingFile = path.join(__dirname,'pending/' + pendingFileCount + '.log');
+  } while(fs.exists(pendingFile));
+
+  return pendingFile;
 }
 
 function onPacketReceived(timestamp, packet) {
@@ -151,8 +171,12 @@ function onPacketReceived(timestamp, packet) {
 
         if (pendingPacketCount === config.get().pendingPacketThreshold) {
           logger.info("reached packet threshold - moving to transmit");
-          fs.renameSync(pendingFile,path.join(__dirname,'transmit/' + pendingFileCount + '.log'));
-          pendingFileCount++;
+          try {
+            fs.renameSync(pendingFile,path.join(__dirname,'transmit/' + pendingFileCount + '.log'));
+          } catch (e) {
+            logger.error("failed to move file from pending to transmit");
+          }
+          findNextPendingFile();
           pendingPacketCount = 0;
         }
       } else {
