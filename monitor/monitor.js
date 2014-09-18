@@ -15,6 +15,9 @@ var pendingFileCount = 0;
 var fhtMonitor = null;
 var fs20Device = null;
 var measuredTemp = 0.0;
+var transmitFiles = [];
+var requestTimer = 0;
+var requestTimeout = 30 * 60 * 1000;  // 30 mins request timeout.
 
 var requestLib = require("request");
 var request = requestLib.defaults({
@@ -31,16 +34,6 @@ var getFS20Port = function() {
   return config.getLocal("fs20Port","/dev/ttyAMA0");
 };
 
-var initDevice = function() {
-  // Send temperature set point request.
-  var deviceCode = config.getLocal("fs20Code","");
-  if (deviceCode.length > 0) {
-    var msg = deviceCode + "41" + "0024";
-    logger.info("set point on " + deviceCode + " : " + msg);
-    fhtMonitor.writeFHT(msg);
-  }
-};
-
 var startFHT = function() {
   if (fhtMonitor === null) {
     logger.info("starting fht monitor");
@@ -50,7 +43,6 @@ var startFHT = function() {
       fhtMonitor.on("packet", onPacketReceived);
       fhtMonitor.start();
       setTimeout(transmitData,config.get().transmitFrequency);
-      setTimeout(initDevice,10000);
     } catch (e) {
       logger.error("failed to open transceiver port: " + getFS20Port() + " error is: " + JSON.stringify(e));
     }
@@ -176,42 +168,72 @@ function updateTransmitTotals(count) {
   config.setLocal("sessionTransmit",afterStart + count);
 }
 
-function doTransmit(files,index,cb) {
-  var file = files[index];
-  var transmitData = fs.readFileSync(file).toString();
-  updateTransmitTotals(transmitData.length);
-  logger.info("transmitting file: " + file + ", " + transmitData.length + " bytes");
-  request.post(config.get().server + "/data/" + config.getLocal("devKey"), { json: { data: transmitData }}, function(err,resp,body) {
-    if (err !== null) {
-      logger.error("failed to post data to server: " + JSON.stringify(err));
-      cb();
-    } else if (!body.hasOwnProperty("ok") || body.ok !== true) {
-      logger.error("failed to post data to server: " + JSON.stringify(body));
-      cb();
-    } else {
-      logger.info("transmit successful: " + file);
-      fs.unlink(file);
-      index++;
-      if (index === files.length) {
-        cb();
-      } else {
-        doTransmit(files,index,cb);
-      }
+var clearTransmitFiles = function() {
+  logger.info("deleting successfully transmitted files");
+  transmitFiles.forEach(function(f) {
+    try {
+      fs.unlink(f);
+      logger.info("deleted file " + f);
+    } catch (e) {
+      logger.error("failed to delete file: " + f);
     }
   });
+  transmitFiles = [];
+};
+
+function onRequestTimeOut(cb) {
+  logger.error("request timed out - aborting transmit files");
+  transmitFiles = [];
+  requestTimer = 0;
+  cb();
+}
+
+function doTransmit(transmitPayload,cb) {
+  if (requestTimer === 0) {
+    requestTimer = setTimeout(function() { onRequestTimeOut(cb); }, requestTimeout);
+    updateTransmitTotals(transmitPayload.length);
+    logger.info("transmitting data: " + transmitPayload.length + " bytes");
+    request.post(config.get().server + "/data/" + config.getLocal("devKey"), { json: { data: transmitPayload }}, function(err,resp,body) {
+      if (requestTimer !== 0) {
+        clearTimeout(requestTimer);
+        requestTimer = 0;
+      }
+      if (err !== null) {
+        logger.error("failed to post data to server: " + JSON.stringify(err));
+      } else if (!body.hasOwnProperty("ok") || body.ok !== true) {
+        logger.error("failed to post data to server: " + JSON.stringify(body));
+      } else {
+        logger.info("transmit successful");
+        clearTransmitFiles();
+      }
+      cb();
+    });
+  } else {
+    logger.error("unexpected: - requestTimer running");
+    cb();
+  }
 }
 
 function transmitData() {
-  logger.info("checking files for transmit");
+  transmitFiles = [];
   var transmitDir = path.join(__dirname,'transmit');
-  var transmitFiles = fs.readdirSync(transmitDir).map(function(f) { return path.join(transmitDir,f); });
-  if (transmitFiles.length > 0) {
-    logger.info("transmitting " + transmitFiles.length + " files");
-    doTransmit(transmitFiles,0,function() {
+  var transmitCandidates = fs.readdirSync(transmitDir).map(function(f) { return path.join(transmitDir,f); });
+  if (transmitCandidates.length > 0) {
+    var transmitPayload = "";
+    for (var i = 0, len = transmitCandidates.length; i < len; i++) {
+      var file = transmitCandidates[i];
+      var fileData = fs.readFileSync(file).toString();
+      transmitPayload += fileData;
+      transmitFiles.push(file);
+      if (transmitPayload.length > config.get().maximumTransmitKB*1024) {
+        break;
+      }
+    }
+    logger.info("transmitting " + transmitPayload.length + " bytes");
+    doTransmit(transmitPayload,function() {
       setTimeout(transmitData,config.get().transmitFrequency);
     });
   } else {
-    logger.info("no files to transmit");
     setTimeout(transmitData,config.get().transmitFrequency);
   }
 }
