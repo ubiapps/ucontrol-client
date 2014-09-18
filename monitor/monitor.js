@@ -105,11 +105,7 @@ var initialise = function() {
   var pendingFiles = fs.readdirSync(path.join(__dirname,"pending"));
   for (var i = 0, len = pendingFiles.length; i < len; i++) {
     var pendingFile = pendingFiles[i];
-    try {
-      fs.renameSync(path.join(__dirname,"pending",pendingFile),path.join(__dirname,"transmit", pendingFile));
-    } catch (e) {
-      logger.error("failed to move pending file to transmit");
-    }
+    pendingToTransmit(pendingFile);
   }
 
   findNextPendingFile();
@@ -139,6 +135,20 @@ function findNextPendingFile() {
   } while(fs.exists(pendingFile));
 
   return pendingFile;
+}
+
+function pendingToTransmit(file) {
+  var fileOnly = path.basename(file);
+  var transmitFile = path.join(__dirname,'transmit/' + fileOnly);
+  try {
+    if (!fs.existsSync(transmitFile)) {
+      fs.renameSync(file,transmitFile);
+    } else {
+      logger.info("couldn't move file to transmit - file already exists");
+    }
+  } catch (e) {
+    logger.error("failed to move file from pending to transmit");
+  }
 }
 
 function onPacketReceived(timestamp, packet) {
@@ -171,11 +181,7 @@ function onPacketReceived(timestamp, packet) {
 
         if (pendingPacketCount === config.get().pendingPacketThreshold) {
           logger.info("reached packet threshold - moving to transmit");
-          try {
-            fs.renameSync(pendingFile,path.join(__dirname,'transmit/' + pendingFileCount + '.log'));
-          } catch (e) {
-            logger.error("failed to move file from pending to transmit");
-          }
+          pendingToTransmit(pendingFile);
           findNextPendingFile();
           pendingPacketCount = 0;
         }
