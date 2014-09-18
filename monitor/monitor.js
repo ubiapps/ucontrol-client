@@ -136,7 +136,7 @@ function moveAllPendingFiles() {
   logger.info("transmitting pending logs");
   var pendingFiles = fs.readdirSync(path.join(__dirname,"pending"));
   for (var i = 0, len = pendingFiles.length; i < len; i++) {
-    var pendingFile = pendingFiles[i];
+    var pendingFile = path.join(__dirname,"pending",pendingFiles[i]);
     pendingToTransmit(pendingFile);
   }
 }
