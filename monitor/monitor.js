@@ -132,7 +132,7 @@ function findNextPendingFile() {
   do {
     pendingFileCount++;
     pendingFile = path.join(__dirname,'pending/' + pendingFileCount + '.log');
-  } while(fs.exists(pendingFile));
+  } while(fs.existsSync(pendingFile));
 
   return pendingFile;
 }
