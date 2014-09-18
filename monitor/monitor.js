@@ -198,20 +198,20 @@ function doTransmit(transmitPayload,cb) {
         clearTimeout(requestTimer);
         requestTimer = 0;
       }
-      var failed;
+      var success;
       if (err !== null) {
         logger.error("failed to post data to server: " + JSON.stringify(err));
-        failed = true;
+        success = false;
       } else if (!body.hasOwnProperty("ok") || body.ok !== true) {
         logger.error("failed to post data to server: " + JSON.stringify(body));
-        failed = true;
+        success = false;
       } else {
         logger.info("transmit successful");
         updateTransmitTotals(transmitPayload.length);
         clearTransmitFiles();
-        failed = false;
+        success = true;
       }
-      cb(failed);
+      cb(success);
     });
   } else {
     logger.error("unexpected: - requestTimer running");
@@ -237,8 +237,10 @@ function transmitData() {
     logger.info("transmitting " + transmitPayload.length + " bytes");
     doTransmit(transmitPayload,function(ok) {
       if (ok === true) {
+        logger.info("transmit success - rescheduling in " + config.get().transmitCheckFrequency + " mins");
         transmitTimer = setTimeout(transmitData,config.get().transmitCheckFrequency*60*1000);
       } else {
+        logger.info("transmit failed - rescheduling in " + config.get().transmitErrorFrequency + " mins");
         transmitTimer = setTimeout(transmitData,config.get().transmitErrorFrequency*60*1000);
       }
     });
