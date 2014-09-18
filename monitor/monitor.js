@@ -15,6 +15,7 @@ var pendingFileCount = 0;
 var fhtMonitor = null;
 var fs20Device = null;
 var measuredTemp = 0.0;
+var transmitTimer = 0;
 var transmitFiles = [];
 var requestTimer = 0;
 var requestTimeout = 30 * 60 * 1000;  // 30 mins request timeout.
@@ -42,7 +43,7 @@ var startFHT = function() {
       fhtMonitor = new FS20(getFS20Port());
       fhtMonitor.on("packet", onPacketReceived);
       fhtMonitor.start();
-      setTimeout(transmitData,config.get().transmitFrequency);
+      transmitTimer = setTimeout(transmitData,config.get().transmitCheckFrequency*60*1000);
     } catch (e) {
       logger.error("failed to open transceiver port: " + getFS20Port() + " error is: " + JSON.stringify(e));
     }
@@ -67,7 +68,7 @@ var checkRegistration = function() {
       request.post(config.get().server + "/register", { json: { name: devName } }, function(err,resp,body) {
         if (err !== null || body.id.length === 0) {
           logger.error("failed to register with server: " + JSON.stringify(err));
-          setTimeout(checkRegistration,config.get().registrationFrequency);
+          setTimeout(checkRegistration,config.get().registrationFrequency*60*1000);
         } else {
           logger.info("got device key: " + body.id);
           config.setLocal("devKey",body.id);
@@ -76,7 +77,7 @@ var checkRegistration = function() {
       });
     } else {
       logger.info("waiting for device name");
-      setTimeout(checkRegistration,config.get().registrationFrequency);
+      setTimeout(checkRegistration,config.get().registrationFrequency*60*1000);
     }
   } else {
     logger.info("device registered, starting monitor");
@@ -191,26 +192,30 @@ function onRequestTimeOut(cb) {
 function doTransmit(transmitPayload,cb) {
   if (requestTimer === 0) {
     requestTimer = setTimeout(function() { onRequestTimeOut(cb); }, requestTimeout);
-    updateTransmitTotals(transmitPayload.length);
     logger.info("transmitting data: " + transmitPayload.length + " bytes");
     request.post(config.get().server + "/data/" + config.getLocal("devKey"), { json: { data: transmitPayload }}, function(err,resp,body) {
       if (requestTimer !== 0) {
         clearTimeout(requestTimer);
         requestTimer = 0;
       }
+      var failed;
       if (err !== null) {
         logger.error("failed to post data to server: " + JSON.stringify(err));
+        failed = true;
       } else if (!body.hasOwnProperty("ok") || body.ok !== true) {
         logger.error("failed to post data to server: " + JSON.stringify(body));
+        failed = true;
       } else {
         logger.info("transmit successful");
+        updateTransmitTotals(transmitPayload.length);
         clearTransmitFiles();
+        failed = false;
       }
-      cb();
+      cb(failed);
     });
   } else {
     logger.error("unexpected: - requestTimer running");
-    cb();
+    cb(false);
   }
 }
 
@@ -230,11 +235,15 @@ function transmitData() {
       }
     }
     logger.info("transmitting " + transmitPayload.length + " bytes");
-    doTransmit(transmitPayload,function() {
-      setTimeout(transmitData,config.get().transmitFrequency);
+    doTransmit(transmitPayload,function(ok) {
+      if (ok === true) {
+        transmitTimer = setTimeout(transmitData,config.get().transmitCheckFrequency*60*1000);
+      } else {
+        transmitTimer = setTimeout(transmitData,config.get().transmitErrorFrequency*60*1000);
+      }
     });
   } else {
-    setTimeout(transmitData,config.get().transmitFrequency);
+    transmitTimer = setTimeout(transmitData,config.get().transmitCheckFrequency*60*1000);
   }
 }
 

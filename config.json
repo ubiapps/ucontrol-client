@@ -5,9 +5,10 @@
   "x-api-key": "c9a66",
   "user": "ubiapps",
   "pass": "sppaibu",
-  "transmitFrequency": 10000,
+  "transmitCheckFrequency": 1,
+  "transmitErrorFrequency": 15,
   "remoteBranch": "dist-001",
   "pendingPacketThreshold": 4,
   "maximumTransmitKB": 250,
-  "registrationFrequency": 30000
+  "registrationFrequency": 15
 }
