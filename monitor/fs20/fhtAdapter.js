@@ -60,7 +60,7 @@
       case 0x08:
         // Actuator function.
         if (this.hasValvePosition()) {
-          fht.setData("valvePosition", this.getValvePosition());
+          fht.setData("valvePosition", this.getValvePosition().toFixed(1));
         }
         break;
       case DESIRED_TEMP:
@@ -86,7 +86,7 @@
     }
     
     return 0;
-  }
+  };
     
   fhtAdapter.prototype.getDeviceCode = function() {
     var deviceCode;
@@ -102,12 +102,12 @@
       deviceCode = this.packet.getHeader();
     }
     return deviceCode;
-  }
+  };
   
   fhtAdapter.prototype.hasValvePosition = function() {
     var status = this.packet.get(STATUS_INDEX);
     return this.packet.get(FUNC_INDEX) < 9 && ((status & 0x0f) == ACTUATOR_SYNC || (status & 0x0f) == ACTUATOR_POSITION);
-  }
+  };
   
   fhtAdapter.prototype.getValvePosition = function() {
     if (!this.hasValvePosition()) {
@@ -115,7 +115,7 @@
     }
     
     return (parseFloat(this.packet.get(PARAM_INDEX))/255.0) * 100;
-  }
+  };
   
   fhtAdapter.prototype.toString = function() {
     var cmdString;
@@ -204,7 +204,7 @@
     }
     
     return cmdString;
-  }
+  };
   
   module.exports = fhtAdapter;
 })();

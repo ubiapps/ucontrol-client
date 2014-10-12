@@ -25,19 +25,19 @@
     em.setData("counter", this.packet.get(COUNTER_INDEX));
 
     var cumulativeRevs = this.packet.get(CUMULATIVE_INDEX+1)*256 + this.packet.get(CUMULATIVE_INDEX);
-    var cumulativeConsumption = cumulativeRevs / em.config.revsPerkWh;
+    var cumulativeConsumption = cumulativeRevs; // / em.config.revsPerkWh;
     em.setData("cumulative", cumulativeConsumption);
 
     // The number of revolutions in the last interval (5 mins).
     var intervalRevs = this.packet.get(INTERVAL_INDEX+1)*256 + this.packet.get(INTERVAL_INDEX);
     // The equivalent hourly consumption (given 12 intervals of 5 mins in an hour).
-    var intervalConsumption = (intervalRevs * 12) / em.config.revsPerkWh;
+    var intervalConsumption = (intervalRevs * 12); // / em.config.revsPerkWh;
     em.setData("interval", intervalConsumption);
 
     // The time in seconds of the fastest revolution in the interval (5 mins).
     var peakTime = (this.packet.get(PEAK_INDEX+1)*256 + this.packet.get(PEAK_INDEX))/10;
-    var peakConsumption = (3600/peakTime) / em.config.revsPerkWh;
-    em.setData("peak", peakConsumption);
+    var peakConsumption = (3600/peakTime); // / em.config.revsPerkWh;
+    em.setData("peak", peakConsumption.toFixed(1));
 
     return 0;
   }

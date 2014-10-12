@@ -49,6 +49,8 @@ function checkUpdate() {
   shell.exec("git fetch -v origin " + config.get().remoteBranch + ":refs/remotes/origin/" + config.get().remoteBranch, function(code,output) {
     logger.info("git fetch finished: " + code + " output: " + output);
     if (code === 0) {
+      config.setLocal("checkForUpdates",false);
+
       // Determine if anything new was fetched.
       upToDate = output.indexOf("up to date") !== -1;
       if (upToDate) {
@@ -56,6 +58,7 @@ function checkUpdate() {
       } else {
         logger.info("update received");
       }
+
       // Reset local index to remote master.
       shell.exec("git reset --hard origin/" + config.get().remoteBranch, function(code,output) {
         logger.info("git reset finished: " + code + " output: " + output);
@@ -103,4 +106,9 @@ function startMonitor() {
 
 logger.info("ucontrol booting...");
 setWorkingDirectory();
-checkUpdate();
+
+if (config.getLocal("checkForUpdates") === true) {
+  checkUpdate();
+} else {
+  startMonitor();
+}

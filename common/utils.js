@@ -36,5 +36,8 @@ var scheduleReboot = function(timeout) {
 module.exports = {
   initialise: initialise,
   logger: logger,
-  scheduleReboot: scheduleReboot
+  scheduleReboot: scheduleReboot,
+  commands: {
+    register: "r"
+  }
 };

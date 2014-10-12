@@ -2,34 +2,25 @@
 
 var fs = require("fs");
 var path = require("path");
+
+var utils = require("../common/utils");
+utils.initialise("monitor");
+
+var transport = require("./transport");
 var FS20 = require("./fs20/cul");
 var config = require("../common/config");
 var FS20DeviceClass = require("./fs20/fs20Device");
-var utils = require("../common/utils");
-utils.initialise("monitor");
 
 var logger = utils.logger;
 var pending = [];
 var pendingPacketCount = 0;
 var pendingFileCount = 0;
 var fhtMonitor = null;
-var fs20Device = null;
-var measuredTemp = 0.0;
+var fs20Devices = {};
 var transmitTimer = 0;
 var transmitFiles = [];
 var requestTimer = 0;
 var requestTimeout = 30 * 60 * 1000;  // 30 mins request timeout.
-
-var requestLib = require("request");
-var request = requestLib.defaults({
-  headers: {
-    "x-api-key": config.get()["x-api-key"]
-  },
-  auth: {
-    user: config.get().user,
-    pass: config.get().pass
-  }
-});
 
 var getFS20Port = function() {
   return config.getLocal("fs20Port","/dev/ttyAMA0");
@@ -39,7 +30,18 @@ var startFHT = function() {
   if (fhtMonitor === null) {
     logger.info("starting fht monitor");
     try {
-      fs20Device = new FS20DeviceClass(config.getLocal("fs20Code"));
+      var monitorDevices = config.getLocal("fs20Code");
+      for (var monitorDevice in monitorDevices) {
+        if (monitorDevices.hasOwnProperty(monitorDevice)) {
+          var fs20Type = monitorDevice[0];
+          if (config.getFS20().hasOwnProperty(fs20Type)) {
+            var cfg = config.getFS20()[fs20Type];
+            fs20Devices[monitorDevice] = new FS20DeviceClass(monitorDevice,monitorDevices[monitorDevice],cfg.services);
+          } else {
+            logger.info("no config found for device " + monitorDevice);
+          }
+        }
+      }
       fhtMonitor = new FS20(getFS20Port());
       fhtMonitor.on("packet", onPacketReceived);
       fhtMonitor.start();
@@ -52,10 +54,34 @@ var startFHT = function() {
   }
 };
 
+var callHome = function() {
+  var hello = {
+    deviceId: config.getLocal("devKey",""),
+    name: config.getLocal("name",""),
+    sensors:   config.getLocal("fs20Code")
+  };
+  transport.sendCommand("h", hello, function(err, resp) {
+    if (err !== null) {
+      logger.error("failed to call home: " + JSON.stringify(err));
+      setTimeout(callHome,config.get().registrationFrequency*60*1000);
+    } else {
+      logger.info("called home ok " + JSON.stringify(resp));
+      if (resp.checkForUpdates === true) {
+        config.setLocal("checkForUpdates",true);
+        utils.scheduleReboot(0);
+      } else {
+        startFHT();
+      }
+    }
+  });
+};
+
 var createFolder = function(name) {
   var folderPath = path.join(__dirname,name);
   try {
-    fs.mkdir(folderPath);
+    if (!fs.existsSync(folderPath)) {
+      fs.mkdir(folderPath);
+    }
   } catch (e) {
     // Probably because folder already exists - do nothing.
   }
@@ -69,14 +95,14 @@ var checkRegistration = function() {
     var devName = config.getLocal("name","");
     if (devName.length > 0) {
       logger.info("got device name, registering device: " + devName);
-      request.post(config.get().server + "/register", { json: { name: devName } }, function(err,resp,body) {
-        if (err !== null || body.id.length === 0) {
+      transport.sendCommand("r", { name: devName }, function(err, resp) {
+        if (err !== null) {
           logger.error("failed to register with server: " + JSON.stringify(err));
           setTimeout(checkRegistration,config.get().registrationFrequency*60*1000);
         } else {
-          logger.info("got device key: " + body.id);
-          config.setLocal("devKey",body.id);
-          startFHT();
+          logger.info("got device key: " + resp.id);
+          config.setLocal("devKey",resp.id);
+          callHome();
         }
       });
     } else {
@@ -85,7 +111,7 @@ var checkRegistration = function() {
     }
   } else {
     logger.info("device registered, starting monitor");
-    startFHT();
+    callHome();
   }
 };
 
@@ -155,6 +181,10 @@ function pendingToTransmit(file) {
   }
 }
 
+function isMonitored(deviceCode) {
+  return config.getLocal("fs20Code").hasOwnProperty(deviceCode);
+}
+
 function onPacketReceived(timestamp, packet) {
   // Received a new packet - store it.
   var packetDate = new Date(timestamp);
@@ -168,18 +198,23 @@ function onPacketReceived(timestamp, packet) {
     var deviceCode = adapter.getDeviceCode().toLowerCase();
     deviceSeen(deviceCode);
 
-    if (deviceCode === config.getLocal("fs20Code","").toLowerCase()) {
+    if (isMonitored(deviceCode)) {
+      var fs20Device = fs20Devices[deviceCode];
+      var old = JSON.stringify(fs20Device.getServiceData());
       adapter.applyTo(fs20Device);
 
       logger.info("received data: " + adapter.toString());
 
-      if (measuredTemp !== fs20Device.getData("temperature")) {
-        logger.info("temp changed from: " + measuredTemp + " to " + fs20Device.getData("temperature"));
-        measuredTemp = fs20Device.getData("temperature");
+      var serviceData = fs20Device.getServiceData();
+      var update = JSON.stringify(serviceData);
+
+      if (old !== update) {
+        logger.info(deviceCode + " changed from: " + old + " to " + update);
+        serviceData.timestamp = timestamp;
 
         // Add packet to pending file
         var pendingFile = path.join(__dirname,'pending/' + pendingFileCount + '.log');
-        fs.appendFileSync(pendingFile,timestamp + " " + measuredTemp + "\n");
+        fs.appendFileSync(pendingFile,deviceCode + " " + JSON.stringify(serviceData) + "\n");
 
         pendingPacketCount++;
 
@@ -190,7 +225,7 @@ function onPacketReceived(timestamp, packet) {
           pendingPacketCount = 0;
         }
       } else {
-        logger.info("temperature not changed at: " + measuredTemp);
+        logger.info(deviceCode + " not changed at " + old);
       }
     }
   }
@@ -227,7 +262,7 @@ function doTransmit(transmitPayload,cb) {
   if (requestTimer === 0) {
     requestTimer = setTimeout(function() { onRequestTimeOut(cb); }, requestTimeout);
     logger.info("transmitting data: " + transmitPayload.length + " bytes");
-    request.post(config.get().server + "/data/" + config.getLocal("devKey"), { json: { data: transmitPayload }}, function(err,resp,body) {
+    transport.sendCommand("d", { devKey: config.getLocal("devKey"), data: transmitPayload }, function(err, resp) {
       if (requestTimer !== 0) {
         clearTimeout(requestTimer);
         requestTimer = 0;
@@ -236,8 +271,8 @@ function doTransmit(transmitPayload,cb) {
       if (err !== null) {
         logger.error("failed to post data to server: " + JSON.stringify(err));
         success = false;
-      } else if (!body.hasOwnProperty("ok") || body.ok !== true) {
-        logger.error("failed to post data to server: " + JSON.stringify(body));
+      } else if (!resp.hasOwnProperty("ok") || resp.ok !== true) {
+        logger.error("failed to post data to server: " + JSON.stringify(resp));
         success = false;
       } else {
         logger.info("transmit successful");

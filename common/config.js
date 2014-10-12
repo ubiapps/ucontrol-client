@@ -3,13 +3,10 @@
 var fs = require("fs");
 var path = require("path");
 var config = require("../config.json");
+var fs20Config = require("../fs20Config.json");
 var localConfigPath = path.join(__dirname,"../","config.local.json");
 var utils = require("./utils");
 var localConfig = {};
-
-var load = function() {
-  return config;
-};
 
 var loadLocal = function() {
   if (fs.existsSync(localConfigPath)) {
@@ -65,7 +62,8 @@ var resetLocal = function() {
 loadLocal();
 
 module.exports = {
-  get: load,
+  get: function() { return config; },
+  getFS20: function() { return fs20Config; },
   getLocal: getLocal,
   setLocal: setLocal,
   resetLocal: resetLocal
