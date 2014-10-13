@@ -50,7 +50,7 @@ block content
                 td
                     form(action="/setPort",method="POST")
                         div.input-group
-                            input.form-control(type="text",name="fs20Port",value="#{local.fs20Port}")
+                            input.form-control(type="text",name="fs20Port",value="#{local.fs20Port || '/dev/ttyAMA0'}")
                             span.input-group-btn
                                 button.btn.btn-default set
             tr
