@@ -18,7 +18,7 @@ block content
                     li.list-group-item
                         div.radio
                             label
-                                - if (local.monitorDevices.hasOwnProperty(d)) {
+                                - if (local.monitorDevices && local.monitorDevices.hasOwnProperty(d)) {
                                     input(id="deviceName-#{d}", type="text", value="#{local.monitorDevices[d].name ? local.monitorDevices[d].name : fs20Config[d[0]].parameters.name}", name="deviceName-#{d}", style="margin-right: 20px;")
                                     input(id="device-#{d}", type='checkbox', value='#{d}', name='device-#{d}',checked)
                                     | #{d}
