@@ -2,16 +2,15 @@ extends layout
 
 block content
     br
-    p.alert.alert-warning Consider resetting before changing the device code, as doing so may invalidate data already collected.
     form(name='input', action='setDevice', method='POST')
         .panel.panel-default
-            .panel-heading broadcast device code
+            .panel-heading sensors
             .panel-body
-                p Only data from the selected device will be broadcast to the hub.
+                p Only data from the selected sensors will be broadcast to the hub.
                 - if (Object.keys(local.seenDevices).length > 0) {
-                    p The following devices are in range.
+                    p The following sensors are in range.
                 - } else {
-                    p No devices found.
+                    p No sensors found.
                 - }
                 a.btn.btn-default.pull-right(href="/changeDevice") refresh
             ul.list-group
@@ -19,12 +18,15 @@ block content
                     li.list-group-item
                         div.radio
                             label
-                                - if (d === local.fs20Code) {
-                                    input(id="device-#{d}", type='radio', value='#{d}', name='devices',checked)
+                                - if (local.monitorDevices.hasOwnProperty(d)) {
+                                    input(id="deviceName-#{d}", type="text", value="#{local.monitorDevices[d].name ? local.monitorDevices[d].name : fs20Config[d[0]].parameters.name}", name="deviceName-#{d}", style="margin-right: 20px;")
+                                    input(id="device-#{d}", type='checkbox', value='#{d}', name='device-#{d}',checked)
+                                    | #{d}
                                 - } else {
-                                    input(id="device-#{d}", type='radio', value='#{d}', name='devices')
+                                    input(id="deviceName-#{d}", type="text", value="#{fs20Config[d[0]].parameters.name}", name="deviceName-#{d}", style="margin-right: 20px;")
+                                    input(id="device-#{d}", type='checkbox', value='#{d}', name='device-#{d}')
+                                    | #{d}
                                 - }
-                                | #{d}
                 - }
             .panel-footer
-                button.btn.btn-default set device
+                button.btn.btn-default set sensors

@@ -24,7 +24,7 @@ app.get('/', function(req, res){
 });
 
 app.get("/changeDevice", function(req,res) {
-  res.render("changeDevice",{ static: config.get(), local: config.getLocal() });
+  res.render("changeDevice",{ static: config.get(), local: config.getLocal(), fs20Config: config.getFS20() });
 });
 
 app.get("/versionUpdate", function(req,res) {
@@ -55,14 +55,20 @@ app.post("/setName", function(req, res) {
 });
 
 app.post("/setDevice", function(req, res) {
-  var devCode = req.body.devices;
-  if (devCode.length !== 5) {
-    res.redirect("failed/invalidDeviceCode");
-  } else {
-    config.setLocal("fs20Code",devCode.toLowerCase());
-    rebootRequired = true;
-    res.redirect("success/deviceSet");
+  var monitorDevices = {};
+  for (var d in req.body) {
+    if (req.body.hasOwnProperty(d)) {
+      if (d.indexOf("device-") === 0) {
+        var devCode = req.body[d];
+        monitorDevices[devCode] = {
+          name: req.body["deviceName-" + devCode]
+        }
+      }
+    }
   }
+  config.setLocal("monitorDevices",monitorDevices);
+  rebootRequired = true;
+  res.redirect("success/deviceSet");
 });
 
 app.post("/setPort", function(req,res) {

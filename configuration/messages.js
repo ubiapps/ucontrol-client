@@ -25,7 +25,7 @@ var messages = {
     timer: 200
   },
   deviceSet: {
-    msg: "Device set successfully",
+    msg: "sensors configured successfully",
     redirect: "/",
     timer: 5
   },
