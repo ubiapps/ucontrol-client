@@ -30,7 +30,7 @@ var startFHT = function() {
   if (fhtMonitor === null) {
     logger.info("starting fht monitor");
     try {
-      var monitorDevices = config.getLocal("monitorDevices");
+      var monitorDevices = config.getLocal("monitorDevices",{});
       for (var monitorDevice in monitorDevices) {
         if (monitorDevices.hasOwnProperty(monitorDevice)) {
           var fs20Type = monitorDevice[0];
@@ -56,7 +56,7 @@ var startFHT = function() {
 
 var callHome = function() {
   // Make sure all sensors have a name (use defaults from fs20Config if necessary).
-  var monitorDevices = config.getLocal("monitorDevices");
+  var monitorDevices = config.getLocal("monitorDevices",{});
   var fs20Config = config.getFS20();
   var sensors = {};
   for (var s in monitorDevices) {
@@ -196,7 +196,7 @@ function pendingToTransmit(file) {
 }
 
 function isMonitored(deviceCode) {
-  return config.getLocal("monitorDevices").hasOwnProperty(deviceCode);
+  return config.getLocal("monitorDevices",{}).hasOwnProperty(deviceCode);
 }
 
 function onPacketReceived(timestamp, packet) {
