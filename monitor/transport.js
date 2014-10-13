@@ -1,11 +1,12 @@
 "use strict";
 
 var net = require("net");
+var zlib = require("zlib");
 var utils = require("../common/utils");
 var config = require("../common/config");
 var _callbacks = {};
 var _conn = null;
-var _receivedData = "";
+var _receivedData = null;
 
 function getNextCallbackId() {
   var i = 0;
@@ -15,52 +16,60 @@ function getNextCallbackId() {
   return i;
 }
 
-function receive(data) {
-  try {
-    _receivedData += data.toString();
-    var msg = JSON.parse(_receivedData);
-    _receivedData = "";
-    if (msg.hasOwnProperty("responseTo") && _callbacks.hasOwnProperty(msg.responseTo)) {
-      try {
-        var cb = _callbacks[msg.responseTo];
-        delete _callbacks[msg.responseTo];
-        cb(msg.error, msg.payload);
-      } catch (e) {
-        utils.logger.log("failure during response callback: " + e.message);
-      }
+function receive(inp) {
+    if (_receivedData === null) {
+      _receivedData = inp;
     } else {
-      utils.logger.log("no handler for data");
+      var combined = Buffer.concat([_receivedData,inp]);
+      _receivedData = combined;
     }
-  } catch (e) {
-    // Assume this is a partial message, wait for the remainder to arrive.
-  }
+    zlib.gunzip(_receivedData, function(err, data) {
+      if (err !== null) {
+        // Assume this is a partial message, wait for the remainder to arrive.
+      } else {
+        _receivedData = null;
+        try {
+          var msg = JSON.parse(data);
+          if (msg.hasOwnProperty("responseTo") && _callbacks.hasOwnProperty(msg.responseTo)) {
+            try {
+              var cb = _callbacks[msg.responseTo];
+              delete _callbacks[msg.responseTo];
+              cb(msg.error, msg.payload);
+            } catch (e) {
+              utils.logger.info("failure during response callback: " + e.message);
+            }
+          } else {
+            utils.logger.info("no handler for data");
+            // ToDo - handle push messages.
+          }
+        } catch (e) {
+          utils.logger.info("corrupt message - failed to parse");
+        }
+      }
+    });
 }
 
 function connect(cb) {
   if (_conn === null) {
     var conn = new net.Socket();
     conn.connect(config.get().serverPort, config.get().server, function() {
-      utils.logger.log("connected");
+      utils.logger.info("connected");
       _conn = conn;
-      _receivedData = "";
+      _receivedData = null;
       process.nextTick(function() { cb(_conn); });
     });
 
-    conn.setEncoding("utf8");
     conn.on("data", function(data) {
-      utils.logger.log(data.toString());
       receive(data);
     });
 
     conn.on("error", function(err) {
-      // ToDo - reconnect.
-      utils.logger.log("socket error: " + err.message);
-      utils.logger.log("ToDo - reconnect now");
+      utils.logger.info("socket error: " + err.message);
     });
 
     conn.on("close", function() {
       _conn = null;
-      _receivedData = "";
+      _receivedData = null;
     });
   } else {
     process.nextTick(function() { cb(_conn); });
@@ -78,14 +87,30 @@ function sendCommand(cmd, payload, cb) {
         msg.replyTo = getNextCallbackId();
         _callbacks[msg.replyTo] = cb;
       }
-      conn.write(JSON.stringify(msg));
+      var transmit = JSON.stringify(msg);
+      utils.logger.info("uncompressed length: " + transmit.length);
+      zlib.gzip(transmit, function(err, result) {
+        if (err === null) {
+          utils.logger.info("compressed length: " + result.length);
+          conn.write(result);
+          updateTransmitTotals(result.length);
+        } else {
+          utils.logger.info("failed to compress transmit buffer");
+        }
+      });
     } else {
       cb(new Error("failed to connect"));
     }
   });
 }
 
+function updateTransmitTotals(count) {
+  var totalTransmit = config.getLocal("totalTransmit",0);
+  config.setLocal("totalTransmit",totalTransmit + count);
+  var afterStart = config.getLocal("sessionTransmit",0);
+  config.setLocal("sessionTransmit",afterStart + count);
+}
+
 module.exports = {
   sendCommand: sendCommand
 };
-

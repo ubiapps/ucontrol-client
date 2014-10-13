@@ -19,8 +19,8 @@ var fhtMonitor = null;
 var fs20Devices = {};
 var transmitTimer = 0;
 var transmitFiles = [];
-var requestTimer = 0;
-var requestTimeout = 30 * 60 * 1000;  // 30 mins request timeout.
+var transportTimer = 0;
+var transportTimeout = 30 * 60 * 1000;  // 30 mins timeout.
 
 var getFS20Port = function() {
   return config.getLocal("fs20Port","/dev/ttyAMA0");
@@ -30,7 +30,7 @@ var startFHT = function() {
   if (fhtMonitor === null) {
     logger.info("starting fht monitor");
     try {
-      var monitorDevices = config.getLocal("fs20Code");
+      var monitorDevices = config.getLocal("monitorDevices");
       for (var monitorDevice in monitorDevices) {
         if (monitorDevices.hasOwnProperty(monitorDevice)) {
           var fs20Type = monitorDevice[0];
@@ -55,10 +55,24 @@ var startFHT = function() {
 };
 
 var callHome = function() {
+  // Make sure all sensors have a name (use defaults from fs20Config if necessary).
+  var monitorDevices = config.getLocal("monitorDevices");
+  var fs20Config = config.getFS20();
+  var sensors = {};
+  for (var s in monitorDevices) {
+    if (monitorDevices.hasOwnProperty(s)) {
+      if (!monitorDevices[s].hasOwnProperty("name")) {
+        sensors[s] = { name: fs20Config[s[0]].parameters.name };
+      }
+      else {
+        sensors[s] = { name: monitorDevices[s].name };
+      }
+    }
+  }
   var hello = {
     deviceId: config.getLocal("devKey",""),
     name: config.getLocal("name",""),
-    sensors:   config.getLocal("fs20Code")
+    sensors: sensors
   };
   transport.sendCommand("h", hello, function(err, resp) {
     if (err !== null) {
@@ -182,7 +196,7 @@ function pendingToTransmit(file) {
 }
 
 function isMonitored(deviceCode) {
-  return config.getLocal("fs20Code").hasOwnProperty(deviceCode);
+  return config.getLocal("monitorDevices").hasOwnProperty(deviceCode);
 }
 
 function onPacketReceived(timestamp, packet) {
@@ -231,13 +245,6 @@ function onPacketReceived(timestamp, packet) {
   }
 }
 
-function updateTransmitTotals(count) {
-  var totalTransmit = config.getLocal("totalTransmit",0);
-  config.setLocal("totalTransmit",totalTransmit + count);
-  var afterStart = config.getLocal("sessionTransmit",0);
-  config.setLocal("sessionTransmit",afterStart + count);
-}
-
 var clearTransmitFiles = function() {
   logger.info("deleting successfully transmitted files");
   transmitFiles.forEach(function(f) {
@@ -251,21 +258,21 @@ var clearTransmitFiles = function() {
   transmitFiles = [];
 };
 
-function onRequestTimeOut(cb) {
-  logger.error("request timed out - aborting transmit files");
+function onTransportTimeOut(cb) {
+  logger.error("transport timed out - aborting transmit files");
   transmitFiles = [];
-  requestTimer = 0;
+  transportTimer = 0;
   cb();
 }
 
 function doTransmit(transmitPayload,cb) {
-  if (requestTimer === 0) {
-    requestTimer = setTimeout(function() { onRequestTimeOut(cb); }, requestTimeout);
+  if (transportTimer === 0) {
+    transportTimer = setTimeout(function() { onTransportTimeOut(cb); }, transportTimeout);
     logger.info("transmitting data: " + transmitPayload.length + " bytes");
     transport.sendCommand("d", { devKey: config.getLocal("devKey"), data: transmitPayload }, function(err, resp) {
-      if (requestTimer !== 0) {
-        clearTimeout(requestTimer);
-        requestTimer = 0;
+      if (transportTimer !== 0) {
+        clearTimeout(transportTimer);
+        transportTimer = 0;
       }
       var success;
       if (err !== null) {
@@ -276,14 +283,13 @@ function doTransmit(transmitPayload,cb) {
         success = false;
       } else {
         logger.info("transmit successful");
-        updateTransmitTotals(transmitPayload.length);
         clearTransmitFiles();
         success = true;
       }
       cb(success);
     });
   } else {
-    logger.error("unexpected: - requestTimer running");
+    logger.error("unexpected: - transportTimer running");
     cb(false);
   }
 }
@@ -307,11 +313,10 @@ function transmitData() {
     doTransmit(transmitPayload,function(ok) {
       if (ok === true) {
         logger.info("transmit success - rescheduling in " + config.get().transmitCheckFrequency + " mins");
-        transmitTimer = setTimeout(transmitData,config.get().transmitCheckFrequency*60*1000);
       } else {
         logger.info("transmit failed - rescheduling in " + config.get().transmitErrorFrequency + " mins");
-        transmitTimer = setTimeout(transmitData,config.get().transmitErrorFrequency*60*1000);
       }
+      transmitTimer = setTimeout(transmitData,config.get().transmitCheckFrequency*60*1000);
     });
   } else {
     transmitTimer = setTimeout(transmitData,config.get().transmitCheckFrequency*60*1000);

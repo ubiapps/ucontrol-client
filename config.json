@@ -9,7 +9,7 @@
   "transmitCheckFrequency": 1,
   "transmitErrorFrequency": 15,
   "remoteBranch": "dist-001",
-  "pendingPacketThreshold": 4,
+  "pendingPacketThreshold": 1,
   "maximumTransmitKB": 250,
-  "registrationFrequency": 15
+  "registrationFrequency": 30
 }
