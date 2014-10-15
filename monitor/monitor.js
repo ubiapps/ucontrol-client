@@ -263,7 +263,7 @@ function onTransportTimeOut(cb) {
   logger.error("transport timed out - aborting transmit files");
   transmitFiles = [];
   transportTimer = 0;
-  cb();
+  cb(false);
 }
 
 function doTransmit(transmitPayload,cb) {

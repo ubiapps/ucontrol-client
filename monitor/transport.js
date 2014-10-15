@@ -51,12 +51,13 @@ function receive(inp) {
 
 function connect(cb) {
   if (_conn === null) {
+    var connected = false;
     var conn = new net.Socket();
     conn.connect(config.get().serverPort, config.get().server, function() {
       utils.logger.info("connected");
       _conn = conn;
       _receivedData = null;
-      process.nextTick(function() { cb(_conn); });
+      process.nextTick(function() { connected = true; cb(_conn); });
     });
 
     conn.on("data", function(data) {
@@ -64,7 +65,10 @@ function connect(cb) {
     });
 
     conn.on("error", function(err) {
-      utils.logger.info("socket error: " + err.message);
+      utils.logger.error("socket error: " + err.message);
+      if (!connected) {
+        cb(null);
+      }
     });
 
     conn.on("close", function() {
