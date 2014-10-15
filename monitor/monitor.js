@@ -70,6 +70,7 @@ var callHome = function() {
     }
   }
   var hello = {
+    version: config.get().version,
     deviceId: config.getLocal("devKey",""),
     name: config.getLocal("name",""),
     sensors: sensors
