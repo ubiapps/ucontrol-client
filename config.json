@@ -1,5 +1,5 @@
 {
-  "version": 9,
+  "version": 10,
   "networkErrorRebootTime": 5,
   "debugServer": "192.168.1.81",
   "server": "54.246.122.56",
