@@ -19,7 +19,7 @@ function installUpdate() {
       logger.error("npm install failed");
       config.setLocal("npmFailCount", config.getLocal("npmFailCount",0) + 1);
       // Could be network error?
-      utils.scheduleReboot(config.get().networkErrorRebootTime);
+      utils.scheduleReboot(config.get().networkErrorRebootTime * 60 * 1000);
     }
   });
 }
@@ -42,7 +42,6 @@ function checkUpdate() {
     logger.error("git " + cmd + " command failed");
     config.setLocal("gitFailCount",config.getLocal("gitFailCount",0) + 1);
     // Now what? Could be network error?
-    //utils.scheduleReboot(config.get().networkErrorRebootTime);
     startMonitor();
   };
 

@@ -38,9 +38,20 @@ function receive(inp) {
             } catch (e) {
               utils.logger.info("failure during response callback: " + e.message);
             }
+          } else if (msg.hasOwnProperty("cmd")) {
+            utils.logger.info("received command from server: " + msg.cmd);
+            switch (msg.cmd) {
+              case "reboot":
+                sendResponse(msg.replyTo, { ack: true });
+                utils.scheduleReboot(0);
+                break;
+              case "halt":
+                sendResponse(msg.replyTo, { ack: true });
+                utils.shutdown();
+                break;
+            }
           } else {
-            utils.logger.info("no handler for data");
-            // ToDo - handle push messages.
+            utils.logger.info("not callback or command - ignored: " + data);
           }
         } catch (e) {
           utils.logger.info("corrupt message - failed to parse");
@@ -80,17 +91,9 @@ function connect(cb) {
   }
 };
 
-function sendCommand(cmd, payload, cb) {
+function send(msg) {
   connect(function(conn) {
     if (conn) {
-      var msg = {
-        cmd: cmd,
-        payload: payload
-      };
-      if (typeof cb === "function") {
-        msg.replyTo = getNextCallbackId();
-        _callbacks[msg.replyTo] = cb;
-      }
       var transmit = JSON.stringify(msg);
       utils.logger.info("uncompressed length: " + transmit.length);
       zlib.gzip(transmit, function(err, result) {
@@ -104,6 +107,34 @@ function sendCommand(cmd, payload, cb) {
       });
     } else {
       cb(new Error("failed to connect"));
+    }
+  });
+}
+
+function sendResponse(responseTo, payload) {
+  connect(function(conn) {
+    if (conn) {
+      var msg = {
+        responseTo: responseTo,
+        payload: payload
+      };
+      send(msg);
+    }
+  });
+}
+
+function sendCommand(cmd, payload, cb) {
+  connect(function(conn) {
+    if (conn) {
+      var msg = {
+        cmd: cmd,
+        payload: payload
+      };
+      if (typeof cb === "function") {
+        msg.replyTo = getNextCallbackId();
+        _callbacks[msg.replyTo] = cb;
+      }
+      send(msg);
     }
   });
 }

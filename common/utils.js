@@ -6,6 +6,11 @@ var initialise = function(logName) {
   logger.add(logger.transports.File, { filename: logName + ".log" });
 };
 
+var shutdown = function() {
+  logger.info("shutdown....");
+  shell.exec("sudo halt");
+};
+
 // Reboot after the given time interval.
 var scheduleReboot = function(timeout) {
   var elapse;
@@ -37,6 +42,7 @@ module.exports = {
   initialise: initialise,
   logger: logger,
   scheduleReboot: scheduleReboot,
+  shutdown: shutdown,
   commands: {
     register: "r"
   }

@@ -24,7 +24,26 @@ app.get('/', function(req, res){
 });
 
 app.get("/changeDevice", function(req,res) {
-  res.render("changeDevice",{ static: config.get(), local: config.getLocal(), fs20Config: config.getFS20() });
+  // Merge current device list with seen devices.
+  var devices = {};
+  var current = config.getLocal().monitorDevices;
+  for (var c in current) {
+    if (current.hasOwnProperty(c)) {
+      devices[c] = {
+        name: current[c].name
+      }
+    }
+  }
+  var seen = config.getLocal().seenDevices;
+  for (var s in seen) {
+    if (seen.hasOwnProperty(s) && !devices.hasOwnProperty(s)) {
+      devices[s] = {
+        name: config.getFS20()[s[0]].parameters.name
+      }
+    }
+  }
+
+  res.render("changeDevice",{ static: config.get(), local: config.getLocal(), fs20Config: config.getFS20(), devices: devices });
 });
 
 app.get("/versionUpdate", function(req,res) {

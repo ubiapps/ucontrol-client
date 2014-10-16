@@ -1,15 +1,16 @@
 {
   "version": 9,
-  "networkErrorRebootTime": 300000,
-  "server": "192.168.1.81",
+  "networkErrorRebootTime": 5,
+  "debugServer": "192.168.1.81",
+  "server": "54.246.122.56",
   "serverPort": 8092,
-  "x-api-key": "c9a66",
+  "x-api-key": "c9a63",
   "user": "ubiapps",
   "pass": "sppaibu",
   "transmitCheckFrequency": 1,
   "transmitErrorFrequency": 15,
-  "remoteBranch": "dist-001",
+  "remoteBranch": "dist-002",
   "pendingPacketThreshold": 1,
   "maximumTransmitKB": 250,
-  "registrationFrequency": 30
+  "registrationFrequency": 15
 }
