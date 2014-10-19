@@ -37,6 +37,11 @@
       case "K":
         var ashAdapter = require("./ashAdapter");
         adapter = new ashAdapter(packet);
+        break;
+      case "F":
+        var pirAdapter = require("./pirAdapter");
+        adapter = new pirAdapter(packet);
+        break;
       default:
         break;
     }

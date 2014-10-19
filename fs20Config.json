@@ -69,10 +69,10 @@
       "name": "pir"
     },
     "services": {
-      "movement": {
-        "name": "movement",
+      "brightness": {
+        "name": "brightness",
         "type": "sensor",
-        "subType": "movement",
+        "subType": "pir",
         "units": "on/off"
       }
     }
