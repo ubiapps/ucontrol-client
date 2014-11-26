@@ -85,6 +85,15 @@ function checkUpdate() {
 
 // Launch the monitor script using forever
 function startMonitor() {
+  logger.info("modprobe");
+  shell.exec("modprobe cp210x", function(code,output) {
+    if (code === 0) {
+      logger.info("modprobe OK");
+    } else {
+      logger.info("modprobe failed with error code: " + code + " and output " + output);
+    }
+  });
+
   logger.info("starting monitor");
   shell.exec("forever -c node start -a -l monitorForever.log -o monitorOut.log -e monitorError.log monitor/monitor.js",function(code,output) {
     if (code === 0) {
