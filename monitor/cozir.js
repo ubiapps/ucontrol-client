@@ -30,15 +30,15 @@
     this._serialPort.on("open", function() {
       utils.logger.info("cozir - opened port");
 
+      self._serialPort.on("data",function(data) {
+        if (typeof data !== "undefined" && data !== null) {
+          utils.logger.info("cozir: " + data);
+          onDataReceived.call(self, data);
+        }
+      });
+
       // Set 'poll' operating mode.
       self._serialPort.write("K 2\r\n");
-    });
-
-    self._serialPort.on("data",function(data) {
-      if (typeof data !== "undefined" && data !== null) {
-        utils.logger.info("cozir: " + data);
-        onDataReceived.call(self, data);
-      }
     });
 
     this._serialPort.on("error", function(e) {
