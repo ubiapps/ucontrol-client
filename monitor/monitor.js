@@ -11,6 +11,10 @@ var FS20 = require("./fs20/cul");
 var config = require("../common/config");
 var FS20DeviceClass = require("./fs20/fs20Device");
 
+var COzir = require("./cozir");
+var cozirMonitor = null;
+var cozirId = "z01";
+
 var logger = utils.logger;
 var pending = [];
 var pendingPacketCount = 0;
@@ -21,12 +25,17 @@ var transmitTimer = 0;
 var transmitFiles = [];
 var transportTimer = 0;
 var transportTimeout = 30 * 60 * 1000;  // 30 mins timeout.
+var wiredSensorData = {};
 
 var getFS20Port = function() {
   return config.getLocal("fs20Port","/dev/ttyAMA0");
 };
 
-var startFHT = function() {
+var getCOzirPort = function() {
+  return config.getLocal("cozirPort","");
+};
+
+var startMonitoring = function() {
   if (fhtMonitor === null) {
     logger.info("starting fht monitor");
     try {
@@ -43,12 +52,29 @@ var startFHT = function() {
         }
       }
       fhtMonitor = new FS20(getFS20Port());
-      fhtMonitor.on("packet", onPacketReceived);
+      fhtMonitor.on("packet", onPacketFS20Received);
       fhtMonitor.start();
-      transmitTimer = setTimeout(transmitData,config.get().transmitCheckFrequency*60*1000);
     } catch (e) {
-      logger.error("failed to open transceiver port: " + getFS20Port() + " error is: " + JSON.stringify(e));
+      logger.error("failed to start FHT monitor on port: " + getFS20Port() + " error is: " + JSON.stringify(e));
     }
+
+    try {
+      var cozirPort = getCOzirPort();
+      if (cozirPort.length > 0) {
+        logger.info("starting COZIR monitor");
+        cozirMonitor = new COzir(cozirPort);
+        cozirMonitor.on("co2", onWiredCO2);
+        cozirMonitor.on("temperature",onWiredTemperature);
+        cozirMonitor.on("humidity",onWiredHumidity);
+        cozirMonitor.start();
+      } else {
+        logger.info("no COZIR attached");
+      }
+    } catch (e) {
+      logger.error("failed to start COZIR monitor on port: " + getFS20Port() + " error is: " + JSON.stringify(e));
+    }
+
+    transmitTimer = setTimeout(transmitData,config.get().transmitCheckFrequency*60*1000);
   } else {
     logger.error("fhtMonitor already running");
   }
@@ -85,7 +111,7 @@ var callHome = function() {
         config.setLocal("checkForUpdates",true);
         utils.scheduleReboot(0);
       } else {
-        startFHT();
+        startMonitoring();
       }
     }
   });
@@ -200,7 +226,45 @@ function isMonitored(deviceCode) {
   return config.getLocal("monitorDevices",{}).hasOwnProperty(deviceCode);
 }
 
-function onPacketReceived(timestamp, packet) {
+function onWiredData(timestamp, data, key) {
+  var old = wiredSensorData[key];
+
+  if (old !== data) {
+    wiredSensorData[key] = data;
+
+    logger.info("wired " + key + " changed from: " + old + " to " + data);
+    wiredSensorData.timestamp = timestamp;
+
+    // Add packet to pending file
+    var pendingFile = path.join(__dirname,'pending/' + pendingFileCount + '.log');
+    fs.appendFileSync(pendingFile,cozirId + " " + JSON.stringify(wiredSensorData) + "\n");
+
+    pendingPacketCount++;
+
+    if (pendingPacketCount === config.get().pendingPacketThreshold) {
+      logger.info("reached packet threshold - moving to transmit");
+      moveAllPendingFiles();
+      findNextPendingFile();
+      pendingPacketCount = 0;
+    }
+  } else {
+    logger.info("wired " + key + " not changed at " + old);
+  }
+}
+
+function onWiredCO2(timestamp, co2) {
+  onWiredData.call(this, timestamp, co2, "co2");
+}
+
+function onWiredTemperature(timestamp, temp) {
+  onWiredData.call(this, timestamp, temp, "temperature");
+}
+
+function onWiredHumidity(timestamp, humidity) {
+  onWiredData.call(this, timestamp, humidity, "humidity");
+}
+
+function onPacketFS20Received(timestamp, packet) {
   // Received a new packet - store it.
   var packetDate = new Date(timestamp);
 
