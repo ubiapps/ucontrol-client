@@ -21,30 +21,30 @@
   cozir.prototype.start = function() {
     var self = this;
 
-    this._serialPort = new serialModule.SerialPort(this._portName, { parser: serialModule.parsers.readline(delimiter), baudrate: 9600}, function(err) {
+    this._serialPort = new serialModule.SerialPort(this._portName, { parser: serialModule.parsers.readline(delimiter), baudrate: 9600}, false);
+
+    this._serialPort.open(function(err) {
       if (typeof err !== "undefined" && err !== null) {
         console.log("cozir - failed to open port " + self._portName + " - " + JSON.stringify(err));
+      } else {
+        utils.logger.info("cozir - opened port");
+
+        self._serialPort.on("error", function(e) {
+          utils.logger.info("cozir - port error: " + JSON.stringify(e));
+        });
+
+        self._serialPort.on("data", function (data) {
+          if (typeof data !== "undefined" && data !== null) {
+            utils.logger.info("cozir: " + data);
+            onDataReceived.call(self, data);
+          }
+        });
+
+        // Set 'poll' operating mode.
+        self._serialPort.write("*\r\n");
+        self._serialPort.write("K 2\r\n");
       }
     });
-
-    this._serialPort.on("open", function() {
-      utils.logger.info("cozir - opened port");
-
-      self._serialPort.on("data",function(data) {
-        if (typeof data !== "undefined" && data !== null) {
-          utils.logger.info("cozir: " + data);
-          onDataReceived.call(self, data);
-        }
-      });
-
-      // Set 'poll' operating mode.
-      self._serialPort.write("K 2\r\n");
-    });
-
-    this._serialPort.on("error", function(e) {
-      utils.logger.info("cozir - port error: " + JSON.stringify(e));
-    });
-
   };
 
   var startPolling = function() {

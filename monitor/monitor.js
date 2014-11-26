@@ -47,7 +47,7 @@ var startMonitoring = function() {
             var cfg = config.getFS20()[fs20Type];
             fs20Devices[monitorDevice] = new FS20DeviceClass(monitorDevice,monitorDevices[monitorDevice],cfg.services);
           } else {
-            logger.info("no config found for device " + monitorDevice);
+            logger.info("no FS20 config found for device " + monitorDevice);
           }
         }
       }

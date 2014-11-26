@@ -8,7 +8,7 @@
   "x-api-key": "c9a63",
   "user": "ubiapps",
   "pass": "sppaibu",
-  "transmitCheckFrequency": 1,
+  "transmitCheckFrequency": 15,
   "transmitErrorFrequency": 15,
   "remoteBranch": "dist-002",
   "pendingPacketThreshold": 1,
