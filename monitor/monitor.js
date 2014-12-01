@@ -81,6 +81,8 @@ var startMonitoring = function() {
 };
 
 var callHome = function() {
+  logger.info("calling home");
+
   // Make sure all sensors have a name (use defaults from fs20Config if necessary).
   var monitorDevices = config.getLocal("monitorDevices",{});
   var fs20Config = config.getFS20();
@@ -151,7 +153,7 @@ var checkRegistration = function() {
       setTimeout(checkRegistration,config.get().registrationFrequency*60*1000);
     }
   } else {
-    logger.info("device registered, starting monitor");
+    logger.info("device already registered");
     callHome();
   }
 };
