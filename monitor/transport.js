@@ -80,6 +80,8 @@ function connect(cb) {
       if (!connected) {
         cb(null);
       }
+      _conn = null;
+      _receivedData = null;
     });
 
     conn.on("close", function() {

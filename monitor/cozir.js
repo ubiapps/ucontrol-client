@@ -41,7 +41,6 @@
         });
 
         // Set 'poll' operating mode.
-        self._serialPort.write("*\r\n");
         self._serialPort.write("K 2\r\n");
       }
     });
