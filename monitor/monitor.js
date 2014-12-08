@@ -74,7 +74,8 @@ var startMonitoring = function() {
       logger.error("failed to start COZIR monitor on port: " + getFS20Port() + " error is: " + JSON.stringify(e));
     }
 
-    transmitTimer = setTimeout(transmitData,config.get().transmitCheckFrequency*60*1000);
+    // Do the first transmit right now (to clear any previous data).
+    transmitTimer = setTimeout(transmitData,0);
   } else {
     logger.error("fhtMonitor already running");
   }
@@ -217,7 +218,7 @@ function pendingToTransmit(file) {
     if (!fs.existsSync(transmitFile)) {
       fs.renameSync(file,transmitFile);
     } else {
-      logger.info("couldn't move file to transmit - file already exists");
+      //logger.info("couldn't move file to transmit - file already exists");
     }
   } catch (e) {
     logger.error("failed to move file from pending to transmit");
