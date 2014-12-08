@@ -24,7 +24,7 @@ var fs20Devices = {};
 var transmitTimer = 0;
 var transmitFiles = [];
 var transportTimer = 0;
-var transportTimeout = 30 * 60 * 1000;  // 30 mins timeout.
+var transportTimeout = 1 * 60 * 1000;  // 1 min timeout.
 var wiredSensorData = {};
 
 var getFS20Port = function() {
