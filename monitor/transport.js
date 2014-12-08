@@ -137,6 +137,8 @@ function sendCommand(cmd, payload, cb) {
         _callbacks[msg.replyTo] = cb;
       }
       send(msg);
+    } else {
+      cb(new Error("failed to connect"),null);
     }
   });
 }
