@@ -330,6 +330,7 @@ function onTransportTimeOut(cb) {
   logger.error("transport timed out - aborting transmit files");
   transmitFiles = [];
   transportTimer = 0;
+  transport.reset();
   cb(false);
 }
 

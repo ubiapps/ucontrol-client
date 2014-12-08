@@ -77,11 +77,11 @@ function connect(cb) {
 
     conn.on("error", function(err) {
       utils.logger.error("socket error: " + err.message);
+      _conn = null;
+      _receivedData = null;
       if (!connected) {
         cb(null);
       }
-      _conn = null;
-      _receivedData = null;
     });
 
     conn.on("close", function() {
@@ -150,6 +150,19 @@ function updateTransmitTotals(count) {
   config.setLocal("sessionTransmit",afterStart + count);
 }
 
+function reset() {
+  if (_conn !== null) {
+    try {
+      _conn.destroy();
+    } catch (e) {
+
+    }
+    _conn = null;
+    _receivedData = null;
+  }
+}
+
 module.exports = {
-  sendCommand: sendCommand
+  sendCommand: sendCommand,
+  reset: reset
 };
