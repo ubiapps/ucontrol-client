@@ -74,8 +74,8 @@ var startMonitoring = function() {
       logger.error("failed to start COZIR monitor on port: " + getFS20Port() + " error is: " + JSON.stringify(e));
     }
 
-    // Do the first transmit right now (to clear any previous data).
-    transmitTimer = setTimeout(transmitData,0);
+    // Do the first transmit imminently (to clear any previous data).
+    transmitTimer = setTimeout(transmitData,5000);
   } else {
     logger.error("fhtMonitor already running");
   }
@@ -113,11 +113,12 @@ var callHome = function() {
       if (resp.checkForUpdates === true) {
         config.setLocal("checkForUpdates",true);
         utils.scheduleReboot(0);
-      } else {
-        startMonitoring();
       }
     }
   });
+
+  // Start monitoring right now - no need to wait for callHome to respond, as the device is already registered.
+  startMonitoring();
 };
 
 var createFolder = function(name) {
