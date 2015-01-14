@@ -15,6 +15,9 @@ var COzir = require("./cozir");
 var cozirMonitor = null;
 var cozirId = "z01";
 
+var OEM = require("./oem");
+var oemMonitor = null;
+
 var logger = utils.logger;
 var pending = [];
 var pendingPacketCount = 0;
@@ -33,6 +36,10 @@ var getFS20Port = function() {
 
 var getCOzirPort = function() {
   return config.getLocal("cozirPort","");
+};
+
+var getOEMPort = function() {
+  return config.getLocal("oemPort","");
 };
 
 var startMonitoring = function() {
@@ -71,7 +78,23 @@ var startMonitoring = function() {
         logger.info("no COZIR attached");
       }
     } catch (e) {
-      logger.error("failed to start COZIR monitor on port: " + getFS20Port() + " error is: " + JSON.stringify(e));
+      logger.error("failed to start COZIR monitor on port: " + getCOzirPort() + " error is: " + JSON.stringify(e));
+    }
+
+    try {
+      var oemPort = getOEMPort();
+      if (oemPort.length > 0) {
+        logger.info("starting OEM monitor");
+        oemMonitor = new OEM(cozirPort);
+        cozirMonitor.on("co2", onWiredCO2);
+        cozirMonitor.on("temperature",onWiredTemperature);
+        cozirMonitor.on("humidity",onWiredHumidity);
+        cozirMonitor.start();
+      } else {
+        logger.info("no OEM attached");
+      }
+    } catch (e) {
+      logger.error("failed to start oem monitor on port: " + getOEMPort() + " error is: " + JSON.stringify(e));
     }
 
     // Do the first transmit imminently (to clear any previous data).
