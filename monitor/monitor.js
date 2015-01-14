@@ -85,11 +85,9 @@ var startMonitoring = function() {
       var oemPort = getOEMPort();
       if (oemPort.length > 0) {
         logger.info("starting OEM monitor");
-        oemMonitor = new OEM(cozirPort);
-        cozirMonitor.on("co2", onWiredCO2);
-        cozirMonitor.on("temperature",onWiredTemperature);
-        cozirMonitor.on("humidity",onWiredHumidity);
-        cozirMonitor.start();
+        oemMonitor = new OEM(oemPort);
+        oemMonitor.on("data", onOEMData);
+        oemMonitor.start();
       } else {
         logger.info("no OEM attached");
       }
@@ -251,6 +249,21 @@ function pendingToTransmit(file) {
 
 function isMonitored(deviceCode) {
   return config.getLocal("monitorDevices",{}).hasOwnProperty(deviceCode);
+}
+
+function onOEMData(timestamp, nodeId, data) {
+  // Add packet to pending file
+  var pendingFile = path.join(__dirname,'pending/' + pendingFileCount + '.log');
+  fs.appendFileSync(pendingFile,"oem-" + nodeId + " " + JSON.stringify(data) + "\n");
+
+  pendingPacketCount++;
+
+  if (pendingPacketCount === config.get().pendingPacketThreshold) {
+    logger.info("reached packet threshold - moving to transmit");
+    moveAllPendingFiles();
+    findNextPendingFile();
+    pendingPacketCount = 0;
+  }
 }
 
 function onWiredData(timestamp, data, key) {
