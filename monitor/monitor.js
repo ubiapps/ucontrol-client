@@ -228,7 +228,7 @@ function findNextPendingFile() {
 
 function moveAllPendingFiles() {
   // Clear pending folder.
-  logger.info("transmitting pending logs");
+  logger.info("moving pending logs to transmit folder");
   var pendingFiles = fs.readdirSync(path.join(__dirname,"pending"));
   for (var i = 0, len = pendingFiles.length; i < len; i++) {
     var pendingFile = path.join(__dirname,"pending",pendingFiles[i]);
@@ -262,7 +262,7 @@ function logData(data) {
   pendingPacketCount++;
 
   if (pendingPacketCount === config.get().pendingPacketThreshold) {
-    logger.info("reached packet threshold - moving to transmit");
+    logger.info("reached log file packet threshold");
     moveAllPendingFiles();
     findNextPendingFile();
     pendingPacketCount = 0;

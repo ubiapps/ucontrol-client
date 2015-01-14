@@ -94,35 +94,41 @@
       utils.logger.info("OEM - bad frame: " + data);
     } else {
       var monitoredDevices = config.getLocal("monitorDevices",{});
-      var nodeId = split[1];
-      if (monitoredDevices.hasOwnProperty("oem-" + nodeId)) {
-        var monitoredDevice = monitoredDevices["oem-" + nodeId];
-        if (oemDeviceConfiguration.hasOwnProperty(monitoredDevice.type)) {
-          var deviceConfig = oemDeviceConfiguration[monitoredDevice.type];
-          var logObj = {};
-          var dataIndex = 2;
-          for (var i = 0, len = deviceConfig.length; i < len; i++) {
-            if (monitoredDevice.log.hasOwnProperty(deviceConfig[i].name)) {
-              var dataItem = ((parseInt(split[dataIndex]) + parseInt(split[dataIndex+1])*256) * deviceConfig[i].scale).toFixed(1);
-              logObj[deviceConfig[i].name] = dataItem;
+      var nodeId = parseInt(split[1]);
+      var monitoredDevice;
+      for (var m in monitoredDevices) {
+        if (monitoredDevices.hasOwnProperty(m)) {
+          if (monitoredDevices[m].nodeId === nodeId) {
+            monitoredDevice = monitoredDevices[m];
+            if (oemDeviceConfiguration.hasOwnProperty(monitoredDevice.type)) {
+              var deviceConfig = oemDeviceConfiguration[monitoredDevice.type];
+              var logObj = {};
+              var dataIndex = 2;
+              for (var i = 0, len = deviceConfig.length; i < len; i++) {
+                if (monitoredDevice.log.hasOwnProperty(deviceConfig[i].name)) {
+                  var dataItem = ((parseInt(split[dataIndex]) + parseInt(split[dataIndex+1])*256) * deviceConfig[i].scale).toFixed(1);
+                  logObj[deviceConfig[i].name] = dataItem;
+                }
+                dataIndex += 2;
+              }
+
+              // Check if data has changed.
+              var jsonData = JSON.stringify(logObj);
+              if (jsonData === this._cachedData[nodeId]) {
+                utils.logger.info("OEM - data not changed for node " + nodeId);
+              } else {
+                logObj.timestamp = Date.now();
+                this.emit("data",m, logObj);
+              }
+              this._cachedData[nodeId] = logObj;
+            } else {
+              utils.logger.info("OEM - no configuration for device type: " + monitoredDevice.type);
             }
-            dataIndex += 2;
+            break;
           }
-
-          // Check if data has changed.
-          var jsonData = JSON.stringify(logObj);
-          if (jsonData === this._cachedData[nodeId]) {
-            utils.logger.info("OEM - data not changed for node " + nodeId);
-          } else {
-            logObj.timestamp = Date.now();
-            this.emit("data",monitoredDevice.type + "-" + nodeId, logObj);
-          }
-          this._cachedData[nodeId] = logObj;
-        } else {
-          utils.logger.info("OEM - no configuration for device type: " + monitoredDevice.type);
         }
-
-      } else {
+      }
+      if (typeof monitoredDevice === "undefined") {
         utils.logger.info("OEM - ignoring data for node " + nodeId);
       }
     }
