@@ -100,7 +100,7 @@
         var deviceType = logDevice.type;
         if (deviceMappings.hasOwnProperty(deviceType)) {
           var deviceConfig = deviceMappings[deviceType];
-          var logObj = { };
+          var logObj = {};
           var dataIndex = 2;
           for (var i = 0, len = deviceConfig.length; i < len; i++) {
             if (logDevice.log.hasOwnProperty(deviceConfig[i].name)) {
