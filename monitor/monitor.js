@@ -254,10 +254,10 @@ function isMonitored(deviceCode) {
   return config.getLocal("monitorDevices",{}).hasOwnProperty(deviceCode);
 }
 
-function onOEMData(timestamp, nodeId, data) {
+function logData(data) {
   // Add packet to pending file
   var pendingFile = path.join(__dirname,'pending/' + pendingFileCount + '.log');
-  fs.appendFileSync(pendingFile,nodeId + " " + JSON.stringify(data) + "\n");
+  fs.appendFileSync(pendingFile,data + "\n");
 
   pendingPacketCount++;
 
@@ -269,6 +269,10 @@ function onOEMData(timestamp, nodeId, data) {
   }
 }
 
+function onOEMData(nodeId, data) {
+  logData(nodeId + " " + JSON.stringify(data));
+}
+
 function onWiredData(timestamp, data, key) {
   var old = wiredSensorData[key];
 
@@ -278,18 +282,7 @@ function onWiredData(timestamp, data, key) {
     logger.info("wired " + key + " changed from: " + old + " to " + data);
     wiredSensorData.timestamp = timestamp;
 
-    // Add packet to pending file
-    var pendingFile = path.join(__dirname,'pending/' + pendingFileCount + '.log');
-    fs.appendFileSync(pendingFile,cozirId + " " + JSON.stringify(wiredSensorData) + "\n");
-
-    pendingPacketCount++;
-
-    if (pendingPacketCount === config.get().pendingPacketThreshold) {
-      logger.info("reached packet threshold - moving to transmit");
-      moveAllPendingFiles();
-      findNextPendingFile();
-      pendingPacketCount = 0;
-    }
+    logData(cozirId + " " + JSON.stringify(wiredSensorData));
   } else {
     logger.info("wired " + key + " not changed at " + old);
   }
@@ -334,18 +327,7 @@ function onPacketFS20Received(timestamp, packet) {
         logger.info(deviceCode + " changed from: " + old + " to " + update);
         serviceData.timestamp = timestamp;
 
-        // Add packet to pending file
-        var pendingFile = path.join(__dirname,'pending/' + pendingFileCount + '.log');
-        fs.appendFileSync(pendingFile,deviceCode + " " + JSON.stringify(serviceData) + "\n");
-
-        pendingPacketCount++;
-
-        if (pendingPacketCount === config.get().pendingPacketThreshold) {
-          logger.info("reached packet threshold - moving to transmit");
-          moveAllPendingFiles();
-          findNextPendingFile();
-          pendingPacketCount = 0;
-        }
+        logData(deviceCode + " " + JSON.stringify(serviceData));
       } else {
         logger.info(deviceCode + " not changed at " + old);
       }
