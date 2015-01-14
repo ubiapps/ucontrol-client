@@ -25,7 +25,7 @@
     ],
     "emonTx": [
       {
-        "name": "power1",
+        "name": "power",
         "scale": 1
       },
       {
