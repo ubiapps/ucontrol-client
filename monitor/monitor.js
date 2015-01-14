@@ -257,7 +257,7 @@ function isMonitored(deviceCode) {
 function onOEMData(timestamp, nodeId, data) {
   // Add packet to pending file
   var pendingFile = path.join(__dirname,'pending/' + pendingFileCount + '.log');
-  fs.appendFileSync(pendingFile,"oem-" + nodeId + " " + JSON.stringify(data) + "\n");
+  fs.appendFileSync(pendingFile,nodeId + " " + JSON.stringify(data) + "\n");
 
   pendingPacketCount++;
 

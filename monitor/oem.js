@@ -104,7 +104,7 @@
           var dataIndex = 2;
           for (var i = 0, len = deviceConfig.length; i < len; i++) {
             if (logDevice.log.hasOwnProperty(deviceConfig[i].name)) {
-              var dataItem = (parseInt(split[dataIndex]) + parseInt(split[dataIndex+1])*256) * deviceConfig[i].scale;
+              var dataItem = ((parseInt(split[dataIndex]) + parseInt(split[dataIndex+1])*256) * deviceConfig[i].scale).toFixed(1);
               logObj[deviceConfig[i].name] = dataItem;
             }
             dataIndex += 2;
@@ -115,7 +115,7 @@
           if (jsonData === this._cachedData[nodeId]) {
             utils.logger.info("OEM - data not changed for node " + nodeId);
           } else {
-            this.emit("data",Date.now(),nodeId, logObj);
+            this.emit("data",Date.now(),deviceType + "-" + nodeId, logObj);
           }
           this._cachedData[nodeId] = logObj;
         } else {
