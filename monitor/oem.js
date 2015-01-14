@@ -104,9 +104,10 @@
           var dataIndex = 2;
           for (var i = 0, len = deviceConfig.length; i < len; i++) {
             if (logDevice.log.hasOwnProperty(deviceConfig[i].name)) {
-              var dataItem = parseInt(split[dataIndex]) + parseInt(split[dataIndex+1])*256;
+              var dataItem = (parseInt(split[dataIndex]) + parseInt(split[dataIndex+1])*256) * deviceConfig[i].scale;
               logObj[deviceConfig[i].name] = dataItem;
             }
+            dataIndex += 2;
           }
 
           // Check if data has changed.
