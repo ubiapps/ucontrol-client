@@ -95,8 +95,8 @@
     } else {
       var monitoredDevices = config.getLocal("monitorDevices",{});
       var nodeId = split[1];
-      if (monitoredDevices.hasOwnProperty(nodeId)) {
-        var monitoredDevice = monitoredDevices[nodeId];
+      if (monitoredDevices.hasOwnProperty("oem-" + nodeId)) {
+        var monitoredDevice = monitoredDevices["oem-" + nodeId];
         if (oemDeviceConfiguration.hasOwnProperty(monitoredDevice.type)) {
           var deviceConfig = oemDeviceConfiguration[monitoredDevice.type];
           var logObj = {};
