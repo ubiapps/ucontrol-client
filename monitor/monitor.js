@@ -31,7 +31,7 @@ var transportTimeout = 1 * 60 * 1000;  // 1 min timeout.
 var wiredSensorData = {};
 
 var getFS20Port = function() {
-  return config.getLocal("fs20Port","/dev/ttyAMA0");
+  return config.getLocal("fs20Port","");
 };
 
 var getCOzirPort = function() {
@@ -44,6 +44,8 @@ var getOEMPort = function() {
 
 var startMonitoring = function() {
   if (fhtMonitor === null) {
+    var fs20Port = getFS20Port();
+    if (fs20Port.length > 0) {
     logger.info("starting fht monitor");
     try {
       var monitorDevices = config.getLocal("monitorDevices",{});
@@ -63,6 +65,7 @@ var startMonitoring = function() {
       fhtMonitor.start();
     } catch (e) {
       logger.error("failed to start FHT monitor on port: " + getFS20Port() + " error is: " + JSON.stringify(e));
+    }
     }
 
     try {
