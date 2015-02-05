@@ -1,5 +1,5 @@
 {
-  "version": 19,
+  "version": 20,
   "networkErrorRebootTime": 5,
   "debugServer": "192.168.1.81",
   "southamptonServer": "192.168.181.131",
@@ -10,7 +10,7 @@
   "pass": "sppaibu",
   "transmitCheckFrequency": 15,
   "transmitErrorFrequency": 15,
-  "remoteBranch": "dist-002",
+  "remoteBranch": "emon-001",
   "pendingPacketThreshold": 1,
   "maximumTransmitKB": 250,
   "registrationFrequency": 15,
