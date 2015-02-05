@@ -65,7 +65,11 @@
   OEM.prototype.start = function() {
     var self = this;
 
-    this._serialPort = new serialModule.SerialPort(this._portName, { parser: serialModule.parsers.readline(delimiter), baudrate: 38400}, false);
+    // For RFM69CW
+//    this._serialPort = new serialModule.SerialPort(this._portName, { parser: serialModule.parsers.readline(delimiter), baudrate: 57600}, false);
+
+    // For RFM12Pi
+    this._serialPort = new serialModule.SerialPort(this._portName, { parser: serialModule.parsers.readline(delimiter), baudrate: 9600}, false);
 
     this._serialPort.open(function(err) {
       if (typeof err !== "undefined" && err !== null) {
@@ -90,7 +94,7 @@
   var onDataReceived = function(data) {
 
     var split = data.split(' ');
-    if (split.length < 2 || split[0] !== "OK") {
+    if (split.length < 2 || (split[0] !== "OK" && split[0] !== "")) {
       utils.logger.info("OEM - bad frame: " + data);
     } else {
       var monitoredDevices = config.getLocal("monitorDevices",{});
