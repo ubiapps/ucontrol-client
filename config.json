@@ -10,7 +10,7 @@
   "pass": "sppaibu",
   "transmitCheckFrequency": 15,
   "transmitErrorFrequency": 15,
-  "remoteBranch": "dist-002",
+  "remoteBranch": "emon-001",
   "pendingPacketThreshold": 1,
   "maximumTransmitKB": 250,
   "registrationFrequency": 15,
