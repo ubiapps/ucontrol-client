@@ -40,6 +40,9 @@
           }
         });
 
+        // Request configuration (sometimes required to get unit to listen to operating mode request.
+        self._serialPort.write("*\r\n");
+
         // Set 'poll' operating mode.
         self._serialPort.write("K 2\r\n");
       }
