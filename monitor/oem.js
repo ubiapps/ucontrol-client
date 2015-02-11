@@ -87,6 +87,9 @@
             onDataReceived.call(self, data);
           }
         });
+
+        // Ensure we're in 433Mhz mode.
+        self._serialPort.write("4 b");
       }
     });
   };
@@ -123,6 +126,9 @@
               } else {
                 logObj.timestamp = Date.now();
                 this.emit("data",m, logObj);
+
+                // Remove timestamp as it will break data comparison test above.
+                delete logObj.timestamp;
               }
               this._cachedData[nodeId] = logObj;
             } else {
