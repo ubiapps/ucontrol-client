@@ -126,11 +126,8 @@
               } else {
                 logObj.timestamp = Date.now();
                 this.emit("data",m, logObj);
-
-                // Remove timestamp as it will break data comparison test above.
-                delete logObj.timestamp;
+                this._cachedData[nodeId] = jsonData;
               }
-              this._cachedData[nodeId] = logObj;
             } else {
               utils.logger.info("OEM - no configuration for device type: " + monitoredDevice.type);
             }
