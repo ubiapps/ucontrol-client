@@ -1,5 +1,5 @@
 {
-  "version": 22,
+  "version": 23,
   "networkErrorRebootTime": 5,
   "debugServer": "192.168.1.81",
   "southamptonServer": "192.168.181.131",
@@ -13,6 +13,7 @@
   "remoteBranch": "emon-001",
   "pendingPacketThreshold": 1,
   "maximumTransmitKB": 250,
+  "fileMoveThreshold": 250,
   "registrationFrequency": 15,
   "cozirPollInterval": 1
 }

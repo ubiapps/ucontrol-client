@@ -230,7 +230,7 @@ function moveAllPendingFiles() {
   // Clear pending folder.
   logger.info("moving pending logs to transmit folder");
   var pendingFiles = fs.readdirSync(path.join(__dirname,"pending"));
-  for (var i = 0, len = pendingFiles.length; i < len; i++) {
+  for (var i = 0, len = pendingFiles.length; i < len && i < config.get().fileMoveThreshold; i++) {
     var pendingFile = path.join(__dirname,"pending",pendingFiles[i]);
     pendingToTransmit(pendingFile);
   }

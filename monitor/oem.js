@@ -90,6 +90,9 @@
 
         // Ensure we're in 433Mhz mode.
         self._serialPort.write("4 b");
+
+        // Set the network group.
+        setTimeout(function() { self._serialPort.write(config.getLocal("oemNetwork","210") + " g"); }, 1000);
       }
     });
   };
@@ -98,7 +101,7 @@
 
     var split = data.split(' ');
     if (split.length < 2 || (split[0] !== "OK" && split[0] !== "")) {
-      utils.logger.info("OEM - bad frame: " + data);
+      utils.logger.info("OEM - ignoring frame: " + data);
     } else {
       var monitoredDevices = config.getLocal("monitorDevices",{});
       var nodeId = parseInt(split[1]);

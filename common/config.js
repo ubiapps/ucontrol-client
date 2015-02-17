@@ -14,8 +14,8 @@ var loadLocal = function() {
     try {
       localConfig = JSON.parse(txt);
     } catch (e) {
-      utils.logger.error("failed to parse config file!");
-      localConfig = {};
+      utils.logger.error("failed to parse config file - aborting...");
+      process.exit();
     }
   } else {
     utils.logger.error("config file missing - creating new");
