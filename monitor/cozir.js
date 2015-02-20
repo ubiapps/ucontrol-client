@@ -41,10 +41,10 @@
         });
 
         // Request configuration (sometimes required to get unit to listen to operating mode request.
-        self._serialPort.write("*\r\n");
+        setTimeout(function() { self._serialPort.write("*\r\n"); }, 1000);
 
         // Set 'poll' operating mode.
-        self._serialPort.write("K 2\r\n");
+        setTimeout(function() { self._serialPort.write("K 2\r\n"); }, 5000);
       }
     });
   };
@@ -59,9 +59,9 @@
     var self = this;
 
     // ToDo - review sequencing.
-    setTimeout(function() { self._serialPort.write("Z\r\n"); }, 0);
-    setTimeout(function() { self._serialPort.write("T\r\n"); }, 250);
-    setTimeout(function() { self._serialPort.write("H\r\n"); }, 500);
+    setTimeout(function() { self._serialPort.write("Z\r\n"); }, 500);
+    setTimeout(function() { self._serialPort.write("T\r\n"); }, 5500);
+    setTimeout(function() { self._serialPort.write("H\r\n"); }, 10500);
   };
 
   var handleCO2 = function(data) {

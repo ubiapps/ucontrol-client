@@ -89,10 +89,10 @@
         });
 
         // Ensure we're in 433Mhz mode.
-        self._serialPort.write("4 b");
+        setTimeout(function() { self._serialPort.write("4b"); }, 1000);
 
         // Set the network group.
-        setTimeout(function() { self._serialPort.write(config.getLocal("oemNetwork","210") + " g"); }, 1000);
+        setTimeout(function() { self._serialPort.write(config.getLocal("oemNetwork","210") + "g"); }, 2000);
       }
     });
   };
