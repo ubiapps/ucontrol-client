@@ -116,7 +116,7 @@ logger.info("ucontrol booting...");
 setWorkingDirectory();
 
 if (config.getLocal("checkForUpdates") === true) {
-  checkUpdate();
+  setTimeout(checkUpdate,60000);
 } else {
   startMonitor();
 }
