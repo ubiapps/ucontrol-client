@@ -65,11 +65,8 @@
   OEM.prototype.start = function() {
     var self = this;
 
-    // For RFM69CW
-//    this._serialPort = new serialModule.SerialPort(this._portName, { parser: serialModule.parsers.readline(delimiter), baudrate: 57600}, false);
-
-    // For RFM12Pi
-    this._serialPort = new serialModule.SerialPort(this._portName, { parser: serialModule.parsers.readline(delimiter), baudrate: 9600}, false);
+    var baud = config.getLocal("oemBaud",9600);
+    this._serialPort = new serialModule.SerialPort(this._portName, { parser: serialModule.parsers.readline(delimiter), baudrate: baud}, false);
 
     this._serialPort.open(function(err) {
       if (typeof err !== "undefined" && err !== null) {
@@ -88,11 +85,17 @@
           }
         });
 
+        // Set quiet mode.
+        setTimeout(function() { self._serialPort.write("1q"); }, 1000);
+
+        // Set radio Node ID to 1.
+        setTimeout(function() { self._serialPort.write("1i"); }, 2000);
+
         // Ensure we're in 433Mhz mode.
-        setTimeout(function() { self._serialPort.write("4b"); }, 1000);
+        setTimeout(function() { self._serialPort.write("4b"); }, 3000);
 
         // Set the network group.
-        setTimeout(function() { self._serialPort.write(config.getLocal("oemNetwork","210") + "g"); }, 2000);
+        setTimeout(function() { self._serialPort.write(config.getLocal("oemNetwork","210") + "g"); }, 4000);
       }
     });
   };
