@@ -13,7 +13,14 @@
     this._portName = port;
     this._serialPort = null;
     this._timer = 0;
+    this._lastCO2 = -999;
+    this._lastTemperature = -999;
+    this._lastHumidity = -999;
   }
+
+  cozir.maxCO2Delta = 200;
+  cozir.maxTemperatureDelta = 2;
+  cozir.maxHumidityDelta = 5;
 
   cozir.prototype = Object.create(eventEmitter.prototype);
   cozir.prototype.constructor = cozir;
@@ -65,18 +72,39 @@
   };
 
   var handleCO2 = function(data) {
-    var co2 = data.substr(2);
-    this.emit("co2",Date.now(),parseInt(co2));
+    var co2 = parseInt(data.substr(2));
+    // Check for rogue values
+    var diff = Math.abs(co2 - this._lastCO2);
+    if (this._lastCO2 === -999 || diff < cozir.maxCO2Delta) {
+      this._lastCO2 = co2;
+      this.emit("co2",Date.now(),co2);
+    } else {
+      utils.logger.info("cozir - co2 delta too big, ignoring: " + co2);
+    }
   };
 
   var handleHumidity = function(data) {
-    var humidity = data.substr(2);
-    this.emit("humidity",Date.now(),parseInt(humidity)/10);
+    var humidity = parseInt(data.substr(2))/10;
+    // Check for rogue data.
+    var diff = Math.abs(humidity - this._lastHumidity);
+    if (this._lastHumidity === -999 || diff < cozir.maxHumidityDelta) {
+      this._lastHumidity = humidity;
+      this.emit("humidity",Date.now(),humidity);
+    } else {
+      utils.logger.info("cozir - humidity delta too big, ignoring: " + humidity);
+    }
   };
 
   var handleTemperature = function(data) {
-    var temp = data.substr(2);
-    this.emit("temperature",Date.now(),(parseInt(temp) - 1000)/10);
+    var temp = (parseInt(data.substr(2)) - 1000)/10;
+    // Check for rogue data.
+    var diff = Math.abs(temp - this._lastTemperature);
+    if (this._lastTemperature === -999 || diff < cozir.maxTemperatureDelta) {
+      this._lastTemperature = temp;
+      this.emit("temperature",Date.now(),temp);
+    } else {
+      utils.logger.info("cozir - temperature delta too big, ignoring: " + temp);
+    }
   };
 
   var onDataReceived = function(data) {
