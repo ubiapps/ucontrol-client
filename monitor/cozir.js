@@ -83,7 +83,7 @@
     }
 
     // Schedule next poll.
-    startPolling();
+    startPolling.call(this);
   };
 
   var handleHumidity = function(data) {
