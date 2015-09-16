@@ -58,17 +58,17 @@
 
   var startPolling = function() {
     if (this._timer === 0) {
-      this._timer = setInterval(poll.bind(this), config.get().cozirPollInterval*60*1000);
+      this._timer = setTimeout(poll.bind(this), config.get().cozirPollInterval*60*1000);
     }
   };
 
   var poll = function() {
-    var self = this;
+    this._timer = 0;
 
-    // ToDo - review sequencing.
-    setTimeout(function() { self._serialPort.write("Z\r\n"); }, 500);
-    setTimeout(function() { self._serialPort.write("T\r\n"); }, 5500);
-    setTimeout(function() { self._serialPort.write("H\r\n"); }, 10500);
+    // Ask for CO2 data only.
+    this._serialPort.write("Z\r\n");
+    //this._serialPort.write("T\r\n");
+    //this._serialPort.write("H\r\n");
   };
 
   var handleCO2 = function(data) {
@@ -81,6 +81,9 @@
     } else {
       utils.logger.info("cozir - co2 delta too big, ignoring: " + co2);
     }
+
+    // Schedule next poll.
+    startPolling();
   };
 
   var handleHumidity = function(data) {
