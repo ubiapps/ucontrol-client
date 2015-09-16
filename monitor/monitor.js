@@ -18,6 +18,7 @@ var cozirId = "z01";
 var OEM = require("./oem");
 var oemMonitor = null;
 
+var monitoring = false;
 var logger = utils.logger;
 var pending = [];
 var pendingPacketCount = 0;
@@ -43,29 +44,31 @@ var getOEMPort = function() {
 };
 
 var startMonitoring = function() {
-  if (fhtMonitor === null) {
+  if (!monitoring) {
+    monitoring = true;
+    
     var fs20Port = getFS20Port();
     if (fs20Port.length > 0) {
-    logger.info("starting fht monitor");
-    try {
-      var monitorDevices = config.getLocal("monitorDevices",{});
-      for (var monitorDevice in monitorDevices) {
-        if (monitorDevices.hasOwnProperty(monitorDevice)) {
-          var fs20Type = monitorDevice[0];
-          if (config.getFS20().hasOwnProperty(fs20Type)) {
-            var cfg = config.getFS20()[fs20Type];
-            fs20Devices[monitorDevice] = new FS20DeviceClass(monitorDevice,monitorDevices[monitorDevice],cfg.services);
-          } else {
-            logger.info("no FS20 config found for device " + monitorDevice);
+      logger.info("starting fht monitor");
+      try {
+        var monitorDevices = config.getLocal("monitorDevices",{});
+        for (var monitorDevice in monitorDevices) {
+          if (monitorDevices.hasOwnProperty(monitorDevice)) {
+            var fs20Type = monitorDevice[0];
+            if (config.getFS20().hasOwnProperty(fs20Type)) {
+              var cfg = config.getFS20()[fs20Type];
+              fs20Devices[monitorDevice] = new FS20DeviceClass(monitorDevice,monitorDevices[monitorDevice],cfg.services);
+            } else {
+              logger.info("no FS20 config found for device " + monitorDevice);
+            }
           }
         }
+        fhtMonitor = new FS20(getFS20Port());
+        fhtMonitor.on("packet", onPacketFS20Received);
+        fhtMonitor.start();
+      } catch (e) {
+        logger.error("failed to start FHT monitor on port: " + getFS20Port() + " error is: " + JSON.stringify(e));
       }
-      fhtMonitor = new FS20(getFS20Port());
-      fhtMonitor.on("packet", onPacketFS20Received);
-      fhtMonitor.start();
-    } catch (e) {
-      logger.error("failed to start FHT monitor on port: " + getFS20Port() + " error is: " + JSON.stringify(e));
-    }
     }
 
     try {
@@ -101,7 +104,7 @@ var startMonitoring = function() {
     // Do the first transmit imminently (to clear any previous data).
     transmitTimer = setTimeout(transmitData,5000);
   } else {
-    logger.error("fhtMonitor already running");
+    logger.error("monitor already running");
   }
 };
 
@@ -140,9 +143,6 @@ var callHome = function() {
       }
     }
   });
-
-  // Start monitoring right now - no need to wait for callHome to respond, as the device is already registered.
-  startMonitoring();
 };
 
 var createFolder = function(name) {
@@ -157,6 +157,8 @@ var createFolder = function(name) {
 };
 
 var checkRegistration = function() {
+  var okToMonitor = false;
+
   logger.info("checking device key");
   var devKey = config.getLocal("devKey","");
   if (devKey.length === 0) {
@@ -172,6 +174,7 @@ var checkRegistration = function() {
           logger.info("got device key: " + resp.id);
           config.setLocal("devKey",resp.id);
           callHome();
+          okToMonitor = true;
         }
       });
     } else {
@@ -181,6 +184,10 @@ var checkRegistration = function() {
   } else {
     logger.info("device already registered");
     callHome();
+    okToMonitor = true;
+  }
+  if (okToMonitor) {
+    startMonitoring();
   }
 };
 
