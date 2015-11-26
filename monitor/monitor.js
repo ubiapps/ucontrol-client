@@ -392,33 +392,61 @@ function doTransmit(transmitPayload,cb) {
   }
 }
 
-function transmitData() {
-  transmitFiles = [];
-  var transmitDir = path.join(__dirname,'transmit');
-  var transmitCandidates = fs.readdirSync(transmitDir).map(function(f) { return path.join(transmitDir,f); });
+function processDirectoryFiles(transmitDir, err, files) {
+  if (err) {
+    logger.error("failed to read transmit directory: " + err.message);
+    return;
+  }
+
+  var transmitCandidates = files.map(function(f) { return path.join(transmitDir,f); });
+
   if (transmitCandidates.length > 0) {
     var transmitPayload = "";
-    for (var i = 0, len = transmitCandidates.length; i < len; i++) {
+
+    var processDirectoryFile = function(i, cb) {
       var file = transmitCandidates[i];
-      var fileData = fs.readFileSync(file).toString();
-      transmitPayload += fileData;
-      transmitFiles.push(file);
-      if (transmitPayload.length > config.get().maximumTransmitKB*1024) {
-        break;
-      }
-    }
-    logger.info("transmitting " + transmitPayload.length + " bytes");
-    doTransmit(transmitPayload,function(ok) {
-      if (ok === true) {
-        logger.info("transmit success - rescheduling in " + config.get().transmitCheckFrequency + " mins");
+      fs.readFile(file, { encoding: "utf8", flag: "r" }, function(err, fileData) {
+        if (err) {
+          // Continue processing subsequent files?
+          logger.error("failed to read file %s: %s", file, err.message);
+        } else {
+          transmitPayload += fileData;
+          transmitFiles.push(file);
+        }
+        i++;
+        if (i >= transmitCandidates.length || transmitPayload.length > config.get().maximumTransmitKB*1024) {
+          cb(null);
+        } else {
+          process.nextTick(function() { processDirectoryFile(i, cb); });
+        }
+      });
+    };
+
+    processDirectoryFile(0, function(err) {
+      if (err) {
+        logger.error("failure during file processing: " + err.message);
+        transmitTimer = setTimeout(transmitData,config.get().transmitCheckFrequency*60*1000);
       } else {
-        logger.info("transmit failed - rescheduling in " + config.get().transmitErrorFrequency + " mins");
+        logger.info("transmitting " + transmitPayload.length + " bytes");
+        doTransmit(transmitPayload, function(ok) {
+          if (ok === true) {
+            logger.info("transmit success - rescheduling in " + config.get().transmitCheckFrequency + " mins");
+          } else {
+            logger.info("transmit failed - rescheduling in " + config.get().transmitCheckFrequency + " mins");
+          }
+          transmitTimer = setTimeout(transmitData,config.get().transmitCheckFrequency*60*1000);
+        });
       }
-      transmitTimer = setTimeout(transmitData,config.get().transmitCheckFrequency*60*1000);
     });
   } else {
     transmitTimer = setTimeout(transmitData,config.get().transmitCheckFrequency*60*1000);
   }
+}
+
+function transmitData() {
+  transmitFiles = [];
+  var transmitDir = path.join(__dirname,'transmit');
+  fs.readdir(transmitDir, function(err, files) { processDirectoryFiles(transmitDir, err, files); } );
 }
 
 initialise();
