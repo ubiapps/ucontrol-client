@@ -104,14 +104,16 @@ function startMonitor() {
       logger.error("monitor failed to start with error code: " + code + " and output: " + output);
     }
   });
-  logger.info("starting admin UI");
-  shell.exec("forever -c node start -a -l configForever.log -o configOut.log -e configError.log configuration/setup.js",function(code,output) {
-    if (code === 0) {
-      logger.info("admin UI started ok");
-    } else {
-      logger.error("admin UI failed to start with error code: " + code + " and output: " + output);
-    }
-  });
+
+  // TOBY - disabled this for the time being. It's not really feasible to connect remotely when using 3g.
+  //logger.info("starting admin UI");
+  //shell.exec("forever -c node start -a -l configForever.log -o configOut.log -e configError.log configuration/setup.js",function(code,output) {
+  //  if (code === 0) {
+  //    logger.info("admin UI started ok");
+  //  } else {
+  //    logger.error("admin UI failed to start with error code: " + code + " and output: " + output);
+  //  }
+  //});
 }
 
 logger.info("ucontrol booting...");

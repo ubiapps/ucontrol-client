@@ -73,7 +73,7 @@
 
     this._serialPort.open(function(err) {
       if (typeof err !== "undefined" && err !== null) {
-        console.log("OEM - failed to open port " + self._portName + " - " + JSON.stringify(err));
+        logger.error("OEM - failed to open port " + self._portName + " - " + JSON.stringify(err));
       } else {
         logger.info("OEM - opened port");
 
@@ -83,7 +83,7 @@
 
         self._serialPort.on("data", function (data) {
           if (typeof data !== "undefined" && data !== null) {
-            logger.info("OEM: " + data);
+            logger.info(data);
             onDataReceived.call(self, data);
           }
         });

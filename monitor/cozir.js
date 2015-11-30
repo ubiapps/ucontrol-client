@@ -35,7 +35,7 @@
 
     this._serialPort.open(function(err) {
       if (typeof err !== "undefined" && err !== null) {
-        console.log("cozir - failed to open port " + self._portName + " - " + JSON.stringify(err));
+        logger.error("cozir - failed to open port " + self._portName + " - " + JSON.stringify(err));
       } else {
         logger.info("cozir - opened port");
 
@@ -45,7 +45,7 @@
 
         self._serialPort.on("data", function (data) {
           if (typeof data !== "undefined" && data !== null) {
-            logger.info("cozir: " + data);
+            logger.info(data);
             onDataReceived.call(self, data);
           }
         });
