@@ -1,11 +1,14 @@
 (function() {
   "use strict";
 
-  var utils = require("../common/utils");
   var config = require("../common/config");
   var serialModule = require("serialport");
   var delimiter = "\r\n";
   var eventEmitter = require('events').EventEmitter;
+  var logger = {
+    info: require("debug")("oem"),
+    error: require("debug")("error:oem")
+  };
 
   var oemDeviceConfiguration = {
     "emonTH": [
@@ -72,15 +75,15 @@
       if (typeof err !== "undefined" && err !== null) {
         console.log("OEM - failed to open port " + self._portName + " - " + JSON.stringify(err));
       } else {
-        utils.logger.info("OEM - opened port");
+        logger.info("OEM - opened port");
 
         self._serialPort.on("error", function(e) {
-          utils.logger.info("OEM - port error: " + JSON.stringify(e));
+          logger.info("OEM - port error: " + JSON.stringify(e));
         });
 
         self._serialPort.on("data", function (data) {
           if (typeof data !== "undefined" && data !== null) {
-            utils.logger.info("OEM: " + data);
+            logger.info("OEM: " + data);
             onDataReceived.call(self, data);
           }
         });
@@ -104,7 +107,7 @@
 
     var split = data.split(' ');
     if (split.length < 2 || (split[0] !== "OK" && split[0] !== "")) {
-      utils.logger.info("OEM - ignoring frame: " + data);
+      logger.info("OEM - ignoring frame: " + data);
     } else {
       var monitoredDevices = config.getLocal("monitorDevices",{});
       var nodeId = parseInt(split[1]);
@@ -128,21 +131,21 @@
               // Check if data has changed.
               var jsonData = JSON.stringify(logObj);
               if (jsonData === this._cachedData[nodeId]) {
-                utils.logger.info("OEM - data not changed for node " + nodeId);
+                logger.info("OEM - data not changed for node " + nodeId);
               } else {
                 logObj.timestamp = Date.now();
                 this.emit("data",m, logObj);
                 this._cachedData[nodeId] = jsonData;
               }
             } else {
-              utils.logger.info("OEM - no configuration for device type: " + monitoredDevice.type);
+              logger.info("OEM - no configuration for device type: " + monitoredDevice.type);
             }
             break;
           }
         }
       }
       if (typeof monitoredDevice === "undefined") {
-        utils.logger.info("OEM - ignoring data for node " + nodeId);
+        logger.info("OEM - ignoring data for node " + nodeId);
       }
     }
   };

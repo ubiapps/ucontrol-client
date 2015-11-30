@@ -1,9 +1,8 @@
 "use strict";
 var shell = require("shelljs");
-var logger = require("winston");
-
-var initialise = function(logName) {
-  logger.add(logger.transports.File, { filename: logName + ".log" });
+var logger = {
+  info: require("debug")("utils"),
+  error: require("debug")("error:utils")
 };
 
 var shutdown = function() {
@@ -39,8 +38,6 @@ var scheduleReboot = function(timeout) {
 };
 
 module.exports = {
-  initialise: initialise,
-  logger: logger,
   scheduleReboot: scheduleReboot,
   shutdown: shutdown,
   commands: {

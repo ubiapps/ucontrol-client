@@ -1,11 +1,14 @@
 (function() {
   "use strict";
 
-  var utils = require("../common/utils");
   var config = require("../common/config");
   var serialModule = require("serialport");
   var delimiter = "\r\n";
   var eventEmitter = require('events').EventEmitter;
+  var logger = {
+    info: require("debug")("cozir"),
+    error: require("debug")("error:cozir")
+  };
 
   function cozir(port) {
     eventEmitter.call(this);
@@ -34,15 +37,15 @@
       if (typeof err !== "undefined" && err !== null) {
         console.log("cozir - failed to open port " + self._portName + " - " + JSON.stringify(err));
       } else {
-        utils.logger.info("cozir - opened port");
+        logger.info("cozir - opened port");
 
         self._serialPort.on("error", function(e) {
-          utils.logger.info("cozir - port error: " + JSON.stringify(e));
+          logger.info("cozir - port error: " + JSON.stringify(e));
         });
 
         self._serialPort.on("data", function (data) {
           if (typeof data !== "undefined" && data !== null) {
-            utils.logger.info("cozir: " + data);
+            logger.info("cozir: " + data);
             onDataReceived.call(self, data);
           }
         });
@@ -77,7 +80,7 @@
       this._lastCO2 = co2;
       this.emit("co2",Date.now(),co2);
     } else {
-      utils.logger.info("cozir - co2 delta too big, ignoring: " + co2);
+      logger.info("cozir - co2 delta too big, ignoring: " + co2);
     }
   };
 
@@ -89,7 +92,7 @@
       this._lastHumidity = humidity;
       this.emit("humidity",Date.now(),humidity);
     } else {
-      utils.logger.info("cozir - humidity delta too big, ignoring: " + humidity);
+      logger.info("cozir - humidity delta too big, ignoring: " + humidity);
     }
   };
 
@@ -101,7 +104,7 @@
       this._lastTemperature = temp;
       this.emit("temperature",Date.now(),temp);
     } else {
-      utils.logger.info("cozir - temperature delta too big, ignoring: " + temp);
+      logger.info("cozir - temperature delta too big, ignoring: " + temp);
     }
   };
 
@@ -120,7 +123,7 @@
         startPolling.call(this);
         break;
       default:
-        utils.logger.info("ignoring data: " + data);
+        logger.info("ignoring data: " + data);
         break;
     }
   };

@@ -16,13 +16,13 @@
     "url": "https://github.com/ubiapps/ucontrol-client/issues"
   },
   "dependencies": {
-    "winston": "~0.7.3",
-    "serialport": "~1.4.5",
-    "request": "~2.40.0",
-    "shelljs": "~0.3.0",
+    "basic-auth-connect": "~1.0.0",
+    "body-parser": "~1.6.5",
+    "debug": "^2.2.0",
     "express": "~4.8.4",
     "jade": "~1.5.0",
-    "body-parser": "~1.6.5",
-    "basic-auth-connect": "~1.0.0"
+    "request": "~2.40.0",
+    "serialport": "~1.4.5",
+    "shelljs": "~0.3.0"
   }
 }

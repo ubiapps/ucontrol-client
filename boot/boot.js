@@ -3,8 +3,10 @@
 var config = require("../common/config");
 var shell = require("shelljs");
 var utils = require("../common/utils");
-utils.initialise("boot");
-var logger = utils.logger;
+var logger = {
+  info: require("debug")("boot"),
+  error: require("debug")("error:boot")
+};
 
 // Executes npm install
 function installUpdate() {

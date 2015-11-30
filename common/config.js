@@ -6,6 +6,10 @@ var config = require("../config.json");
 var fs20Config = require("../fs20Config.json");
 var localConfigPath = path.join(__dirname,"../","config.local.json");
 var utils = require("./utils");
+var logger = {
+  info: require("debug")("config"),
+  error: require("debug")("error:config")
+};
 var localConfig = {};
 
 var loadLocal = function() {
@@ -14,11 +18,11 @@ var loadLocal = function() {
     try {
       localConfig = JSON.parse(txt);
     } catch (e) {
-      utils.logger.error("failed to parse config file - aborting...");
+      logger.error("failed to parse config file - aborting...");
       process.exit();
     }
   } else {
-    utils.logger.error("config file missing - creating new");
+    logger.error("config file missing - creating new");
     localConfig = {};
   }
   return localConfig;

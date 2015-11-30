@@ -4,7 +4,10 @@ var fs = require("fs");
 var path = require("path");
 
 var utils = require("../common/utils");
-utils.initialise("monitor");
+var logger = {
+  info: require("debug")("monitor"),
+  error: require("debug")("error:monitor")
+};
 
 var transport = require("./transport");
 var FS20 = require("./fs20/cul");
@@ -19,7 +22,6 @@ var OEM = require("./oem");
 var oemMonitor = null;
 
 var monitoring = false;
-var logger = utils.logger;
 var pending = [];
 var pendingPacketCount = 0;
 var pendingFileCount = 0;

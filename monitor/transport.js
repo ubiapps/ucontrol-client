@@ -7,6 +7,10 @@ var config = require("../common/config");
 var _callbacks = {};
 var _conn = null;
 var _receivedData = null;
+var logger = {
+  info: require("debug")("transport"),
+  error: require("debug")("error:transport")
+};
 
 function getNextCallbackId() {
   var i = 0;
@@ -36,10 +40,10 @@ function receive(inp) {
               delete _callbacks[msg.responseTo];
               cb(msg.error, msg.payload);
             } catch (e) {
-              utils.logger.info("failure during response callback: " + e.message);
+              logger.info("failure during response callback: " + e.message);
             }
           } else if (msg.hasOwnProperty("cmd")) {
-            utils.logger.info("received command from server: " + msg.cmd);
+            logger.info("received command from server: " + msg.cmd);
             switch (msg.cmd) {
               case "reboot":
                 sendResponse(msg.replyTo, { ack: true });
@@ -51,10 +55,10 @@ function receive(inp) {
                 break;
             }
           } else {
-            utils.logger.info("not callback or command - ignored: " + data);
+            logger.info("not callback or command - ignored: " + data);
           }
         } catch (e) {
-          utils.logger.info("corrupt message - failed to parse");
+          logger.info("corrupt message - failed to parse");
         }
       }
     });
@@ -65,7 +69,7 @@ function connect(cb) {
     var connected = false;
     var conn = new net.Socket();
     conn.connect(config.get().serverPort, config.get().server, function() {
-      utils.logger.info("connected");
+      logger.info("connected");
       _conn = conn;
       _receivedData = null;
       process.nextTick(function() { connected = true; cb(_conn); });
@@ -76,7 +80,7 @@ function connect(cb) {
     });
 
     conn.on("error", function(err) {
-      utils.logger.error("socket error: " + err.message);
+      logger.error("socket error: " + err.message);
       _conn = null;
       _receivedData = null;
       if (!connected) {
@@ -97,14 +101,14 @@ function send(msg) {
   connect(function(conn) {
     if (conn) {
       var transmit = JSON.stringify(msg);
-      utils.logger.info("uncompressed length: " + transmit.length);
+      logger.info("uncompressed length: " + transmit.length);
       zlib.gzip(transmit, function(err, result) {
         if (err === null) {
-          utils.logger.info("compressed length: " + result.length);
+          logger.info("compressed length: " + result.length);
           conn.write(result);
           updateTransmitTotals(result.length);
         } else {
-          utils.logger.info("failed to compress transmit buffer");
+          logger.info("failed to compress transmit buffer");
         }
       });
     } else {
