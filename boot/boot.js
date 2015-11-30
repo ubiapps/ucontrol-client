@@ -97,7 +97,7 @@ function startMonitor() {
   });
 
   logger.info("starting monitor");
-  shell.exec("forever -c node start -a -l monitorForever.log -o monitorOut.log -e monitorError.log monitor/monitor.js",function(code,output) {
+  shell.exec("DEBUG=error:* forever -c node start -a -e monitorOut.log monitor/monitor.js",function(code,output) {
     if (code === 0) {
       logger.info("monitor started ok");
     } else {
