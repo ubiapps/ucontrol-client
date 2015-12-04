@@ -105,7 +105,7 @@ function startMonitor() {
     }
   });
 
-  // TOBY - disabled this for the time being. It's not really feasible to connect remotely when using 3g.
+  // TOBY - disabled this for the time being. It's not really feasible to connect remotely when using 2G/3G.
   //logger.info("starting admin UI");
   //shell.exec("forever -c node start -a -l configForever.log -o configOut.log -e configError.log configuration/setup.js",function(code,output) {
   //  if (code === 0) {
@@ -120,6 +120,8 @@ logger.info("ucontrol booting...");
 setWorkingDirectory();
 
 if (config.getLocal("checkForUpdates") === true) {
+  // Wait a while before checking updates - to all 3g connection to establish.
+  logger.info("will check for updates in 60 secs");
   setTimeout(checkUpdate,60000);
 } else {
   startMonitor();
