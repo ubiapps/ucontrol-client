@@ -24,6 +24,10 @@ var loadLocal = function() {
     var txt = fs.readFileSync(localConfigPath);
     try {
       localConfig = JSON.parse(txt);
+      if (localConfig.oemNetwork) {
+        // This looks like a valid config - save as a backup.
+        fs.writeFileSync(localConfigPath + ".bak", txt);
+      }
     } catch (e) {
       logger.error("failed to parse config file - aborting...");
       process.exit();
