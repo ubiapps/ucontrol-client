@@ -25,7 +25,7 @@ var scheduleReboot = function(timeout) {
 
   var reboot = function() {
     logger.info("rebooting....");
-    shell.exec("sudo reboot");
+    shell.exec("sync; sudo reboot");
   };
 
   if (elapse > 0) {
