@@ -97,7 +97,13 @@ function startMonitor() {
   });
 
   logger.info("starting monitor");
-  shell.exec("DEBUG=error:* forever start --uid monitor -a monitor/monitor.js",function(code,output) {
+  var debugLevel;
+  if (config.getDiagnostics("logLevel","error") === "debug") {
+    debugLevel = "*";
+  } else {
+    debugLevel = "error:*";
+  }
+  shell.exec("DEBUG=" + debugLevel + " forever start --uid monitor -a monitor/monitor.js",function(code,output) {
     if (code === 0) {
       logger.info("monitor started ok");
     } else {
