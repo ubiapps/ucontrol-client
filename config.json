@@ -10,7 +10,7 @@
   "pass": "sppaibu",
   "transmitCheckFrequency": 15,
   "transmitErrorFrequency": 15,
-  "remoteBranch": "emon-001",
+  "remoteBranch": "emon-003",
   "pendingPacketThreshold": 1,
   "maximumTransmitKB": 250,
   "fileMoveThreshold": 250,
