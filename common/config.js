@@ -95,7 +95,7 @@ var saveDiagnostic = function() {
   fs.writeFileSync(diagnosticStorePath, JSON.stringify(diagnosticStore,null,2));
 };
 
-getDiagnostics = function(name, def) {
+var getDiagnostics = function(name, def) {
   loadDiagnostic();
   if (typeof name === "undefined") {
     return diagnosticStore;
@@ -107,7 +107,7 @@ getDiagnostics = function(name, def) {
   }  
 };
 
-setDiagnostics = function(name, val) {
+var setDiagnostics = function(name, val) {
   diagnosticStore[name] = val;
   saveDiagnostic();  
 };
