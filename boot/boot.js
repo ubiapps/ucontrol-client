@@ -15,11 +15,11 @@ function installUpdate() {
   shell.exec("npm install --loglevel verbose", function(code, output) {
     if (code === 0) {
       logger.info("update installed");
-      config.setLocal("npmFailCount",0);
+      config.setDiagnostics("npmFailCount",0);
       utils.scheduleReboot(0);
     } else {
       logger.error("npm install failed");
-      config.setLocal("npmFailCount", config.getLocal("npmFailCount",0) + 1);
+      config.setDiagnostics("npmFailCount", config.getDiagnostics("npmFailCount",0) + 1);
       // Could be network error?
       utils.scheduleReboot(config.get().networkErrorRebootTime * 60 * 1000);
     }
@@ -42,7 +42,7 @@ function checkUpdate() {
 
   var gitFailure = function(cmd) {
     logger.error("git " + cmd + " command failed");
-    config.setLocal("gitFailCount",config.getLocal("gitFailCount",0) + 1);
+    config.setDiagnostics("gitFailCount",config.getDiagnostics("gitFailCount",0) + 1);
     // Now what? Could be network error?
     startMonitor();
   };
@@ -50,7 +50,7 @@ function checkUpdate() {
   shell.exec("git fetch -v origin " + config.get().remoteBranch + ":refs/remotes/origin/" + config.get().remoteBranch, function(code,output) {
     logger.info("git fetch finished: " + code + " output: " + output);
     if (code === 0) {
-      config.setLocal("checkForUpdates",false);
+      config.setDiagnostics("checkForUpdates",false);
 
       // Determine if anything new was fetched.
       upToDate = output.indexOf("up to date") !== -1;
@@ -64,10 +64,10 @@ function checkUpdate() {
       shell.exec("git reset --hard origin/" + config.get().remoteBranch, function(code,output) {
         logger.info("git reset finished: " + code + " output: " + output);
         if (code === 0) {
-          config.setLocal("gitFailCount",0);
+          config.setDiagnostics("gitFailCount",0);
 
           // If an update was received we need to install it.
-          if (upToDate && config.getLocal("npmFailCount",0) === 0) {
+          if (upToDate && config.getDiagnostics("npmFailCount",0) === 0) {
             logger.info("npm install not required");
             startMonitor();
           } else {
@@ -119,7 +119,7 @@ function startMonitor() {
 logger.info("ucontrol booting...");
 setWorkingDirectory();
 
-if (config.getLocal("checkForUpdates") === true) {
+if (config.getDiagnostics("checkForUpdates") === true) {
   // Wait a while before checking updates - to all 3g connection to establish.
   logger.info("will check for updates in 60 secs");
   setTimeout(checkUpdate,60000);

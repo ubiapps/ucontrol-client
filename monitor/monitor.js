@@ -140,7 +140,7 @@ var callHome = function() {
     } else {
       logger.info("called home ok " + JSON.stringify(resp));
       if (resp.checkForUpdates === true) {
-        config.setLocal("checkForUpdates",true);
+        config.setDiagnostics("checkForUpdates",true);
         utils.scheduleReboot(0);
       }
     }
@@ -209,19 +209,19 @@ var initialise = function() {
   findNextPendingFile();
 
   // Reset transmission data count.
-  config.setLocal("sessionTransmit",0);
+  config.setDiagnostics("sessionTransmit",0);
 
   // Reset seen device list.
-  config.setLocal("seenDevices",{});
+  config.setDiagnostics("seenDevices",{});
 
   checkRegistration();
 };
 
 function deviceSeen(devCode) {
-  var seen = config.getLocal("seenDevices",{});
+  var seen = config.getDiagnostics("seenDevices",{});
   if (!seen.hasOwnProperty(devCode)) {
     seen[devCode] = true;
-    config.setLocal("seenDevices",seen);
+    config.setDiagnostics("seenDevices",seen);
   }
 }
 

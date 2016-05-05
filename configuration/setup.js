@@ -34,7 +34,7 @@ app.get("/changeDevice", function(req,res) {
       }
     }
   }
-  var seen = config.getLocal().seenDevices;
+  var seen = config.getDiagnostics().seenDevices;
   for (var s in seen) {
     if (seen.hasOwnProperty(s) && !devices.hasOwnProperty(s)) {
       devices[s] = {
@@ -47,7 +47,7 @@ app.get("/changeDevice", function(req,res) {
 });
 
 app.get("/versionUpdate", function(req,res) {
-  config.setLocal("forceUpdate",true);
+  config.setDiagnostics("forceUpdate",true);
   rebootRequired = true;
   res.redirect("success/versionUpdate");
 });

@@ -148,10 +148,10 @@ function sendCommand(cmd, payload, cb) {
 }
 
 function updateTransmitTotals(count) {
-  var totalTransmit = config.getLocal("totalTransmit",0);
-  config.setLocal("totalTransmit",totalTransmit + count);
-  var afterStart = config.getLocal("sessionTransmit",0);
-  config.setLocal("sessionTransmit",afterStart + count);
+  var totalTransmit = config.getDiagnostics("totalTransmit",0);
+  config.setDiagnostics("totalTransmit",totalTransmit + count);
+  var afterStart = config.getDiagnostics("sessionTransmit",0);
+  config.setDiagnostics("sessionTransmit",afterStart + count);
 }
 
 function reset() {
