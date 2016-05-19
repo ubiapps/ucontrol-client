@@ -21,9 +21,10 @@
     this._lastHumidity = -999;
   }
 
-  cozir.maxCO2Delta = 200;
-  cozir.maxTemperatureDelta = 2;
-  cozir.maxHumidityDelta = 5;
+  // Deprecated - ToDo - remove this functionality.
+  cozir.maxCO2Delta = 99999;
+  cozir.maxTemperatureDelta = 99999;
+  cozir.maxHumidityDelta = 99999;
 
   cozir.prototype = Object.create(eventEmitter.prototype);
   cozir.prototype.constructor = cozir;
