@@ -17,9 +17,7 @@ if [ "$_IP" ]; then
   printf "My IP address is %s\n" "$_IP"
 fi
 
-printf "Starting ucontrol\n"
-PATH=$PATH:/usr/local/bin
-. /root/ucontrol-client/reset-coc.sh
-/usr/local/bin/node /root/ucontrol-client/boot/boot.js &
+printf "Starting interliNQ\n"
+DEBUG=* node /interliNQ/ucontrol-client/boot/boot.js &
 
 exit 0

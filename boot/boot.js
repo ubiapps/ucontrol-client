@@ -103,7 +103,7 @@ function startMonitor() {
   } else {
     debugLevel = "error:*";
   }
-  shell.exec("DEBUG=" + debugLevel + " forever start --uid monitor -a monitor/monitor.js",function(code,output) {
+  shell.exec("FOREVER_ROOT=/interliNQ/.forever DEBUG=" + debugLevel + " forever start --uid monitor -a monitor/monitor.js", function(code,output) {
     if (code === 0) {
       logger.info("monitor started ok");
     } else {
