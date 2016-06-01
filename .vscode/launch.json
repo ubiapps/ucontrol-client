@@ -5,10 +5,10 @@
 			"name": "Launch",
 			"type": "node",
 			"request": "launch",
-			"program": "${workspaceRoot}/sms-monitor/index.js",
+			"program": "${workspaceRoot}/shell-command-processor/index.js",
 			"stopOnEntry": false,
 			"args": [],
-			"cwd": "${workspaceRoot}/sms-monitor",
+			"cwd": "${workspaceRoot}/shell-command-processor",
 			"preLaunchTask": null,
 			"runtimeExecutable": null,
 			"runtimeArgs": [

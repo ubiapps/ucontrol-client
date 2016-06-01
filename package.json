@@ -19,6 +19,6 @@
     "debug": "~2.2.0",
     "request": "~2.40.0",
     "serialport": "~1.4.5",
-    "shelljs": "~0.3.0"
+    "shelljs": "^0.7.0"
   }
 }

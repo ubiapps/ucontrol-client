@@ -270,8 +270,7 @@ module.exports = (function() {
             msgArray.push(msgs);
           }
           
-          var result = "{\"messages\": " + JSON.stringify(msgArray) +"}";                
-          cb(null, result);        
+          cb(null, { messages: msgArray });        
         }
       }
     );    
