@@ -26,6 +26,38 @@ function installUpdate() {
   });
 }
 
+function checkSMSUpdate() {
+  logger.info("checking sms processor");
+  shell.cd("/nqminds/nqm-sms-command-processor");
+  shell.exec("git fetch -v origin " + config.get().smsRemoteBranch + ":refs/remotes/origin/" + config.get().smsRemoteBranch, function(code,output,err) {
+    logger.info("git fetch of SMS processor finished: " + code + " stdout: " + output + " stderr: " + err);
+    if (code === 0) {
+      // Git seems to send normal output to stderr
+      var fullOutput = output + " " + err;
+
+      // Determine if anything new was fetched.
+      var upToDate = fullOutput.indexOf("up to date") !== -1;
+      if (upToDate) {
+        logger.info("SMS processor already up to date");
+      } else {
+        logger.info("SMS processor update received");
+      }
+
+      // Reset local index to remote master.
+      shell.exec("git reset --hard origin/" + config.get().smsRemoteBranch, function(code,output,err) {
+        logger.info("git SMS processor reset finished: " + code + " stdout: " + output + " stderr: " + err);
+        if (code === 0 && !upToDate) {
+          shell.exec("npm install --logLevel verbose");
+        }
+        checkUpdate();
+      });
+    } else {
+      logger.error("git failed to fetch SMS repo: " + err);
+      checkUpdate();
+    }
+  });    
+}
+
 // Changes the working directory to be the project root.
 function setWorkingDirectory() {
   logger.info("setting working directory");
@@ -37,6 +69,7 @@ function setWorkingDirectory() {
 
 // Executes git fetch on project repository.
 function checkUpdate() {
+  setWorkingDirectory();
   logger.info("checking for update...");
   var upToDate = false;
 
@@ -47,13 +80,16 @@ function checkUpdate() {
     startMonitor();
   };
 
-  shell.exec("git fetch -v origin " + config.get().remoteBranch + ":refs/remotes/origin/" + config.get().remoteBranch, function(code,output) {
-    logger.info("git fetch finished: " + code + " output: " + output);
+  shell.exec("git fetch -v origin " + config.get().remoteBranch + ":refs/remotes/origin/" + config.get().remoteBranch, function(code,output, err) {
+    logger.info("git fetch finished: " + code + " stdout: " + output + " stderr: " + err);
     if (code === 0) {
       config.setDiagnostics("checkForUpdates",false);
 
+      // Git seems to send normal output to stderr
+      var fullOutput = output + " " + err;
+
       // Determine if anything new was fetched.
-      upToDate = output.indexOf("up to date") !== -1;
+      upToDate = fullOutput.indexOf("up to date") !== -1;
       if (upToDate) {
         logger.info("already up to date");
       } else {
@@ -61,8 +97,8 @@ function checkUpdate() {
       }
 
       // Reset local index to remote master.
-      shell.exec("git reset --hard origin/" + config.get().remoteBranch, function(code,output) {
-        logger.info("git reset finished: " + code + " output: " + output);
+      shell.exec("git reset --hard origin/" + config.get().remoteBranch, function(code,output,err) {
+        logger.info("git reset finished: " + code + " stdout: " + output + " stderr: " + err);
         if (code === 0) {
           config.setDiagnostics("gitFailCount",0);
 
@@ -129,6 +165,6 @@ if (config.getDiagnostics("checkForUpdates") === true) {
   // Wait a while before checking updates - to all 3g connection to establish.
   logger.info("will check for updates in 60 secs");
   setTimeout(checkUpdate,60000);
-} else {
+} else {  
   startMonitor();
 }

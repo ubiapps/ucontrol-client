@@ -29,8 +29,8 @@ var fhtMonitor = null;
 var fs20Devices = {};
 var transmitTimer = 0;
 var transmitFiles = [];
-var transportTimer = 0;
-var transportTimeout = 1 * 60 * 1000;  // 1 min timeout.
+var transportTimeoutTimer = 0;
+var transportTimeoutInterval = 1 * 60 * 1000;  // 1 min timeout.
 var wiredSensorData = {};
 
 var getFS20Port = function() {
@@ -104,7 +104,7 @@ var startMonitoring = function() {
     }
 
     // Do the first transmit imminently (to clear any previous data).
-    transmitTimer = setTimeout(transmitData,5000);
+    startTransmitTimer(5000);
   } else {
     logger.error("monitor already running");
   }
@@ -360,33 +360,36 @@ var clearTransmitFiles = function() {
 function onTransportTimeOut(cb) {
   logger.error("transport timed out - aborting transmit files");
   transmitFiles = [];
-  transportTimer = 0;
+  transportTimeoutTimer = 0;
   transport.reset();
   cb(false);
 }
 
 function doTransmit(transmitPayload,cb) {
-  if (transportTimer === 0) {
-    transportTimer = setTimeout(function() { onTransportTimeOut(cb); }, transportTimeout);
+  if (transportTimeoutTimer === 0) {
+    transportTimeoutTimer = setTimeout(function() { onTransportTimeOut(cb); }, transportTimeoutInterval);
     logger.info("transmitting data: " + transmitPayload.length + " bytes");
     transport.sendCommand("d", { devKey: config.getLocal("devKey"), data: transmitPayload }, function(err, resp) {
-      if (transportTimer !== 0) {
-        clearTimeout(transportTimer);
-        transportTimer = 0;
-      }
-      var success;
-      if (err !== null) {
-        logger.error("failed to post data to server: " + JSON.stringify(err));
-        success = false;
-      } else if (!resp.hasOwnProperty("ok") || resp.ok !== true) {
-        logger.error("failed to post data to server: " + JSON.stringify(resp));
-        success = false;
+      if (transportTimeoutTimer !== 0) {
+        clearTimeout(transportTimeoutTimer);
+        transportTimeoutTimer = 0;
+        
+        var success;
+        if (err !== null) {
+          logger.error("failed to post data to server: " + JSON.stringify(err));
+          success = false;
+        } else if (!resp.hasOwnProperty("ok") || resp.ok !== true) {
+          logger.error("failed to post data to server: " + JSON.stringify(resp));
+          success = false;
+        } else {
+          logger.info("transmit successful");
+          clearTransmitFiles();
+          success = true;
+        }
+        cb(success);
       } else {
-        logger.info("transmit successful");
-        clearTransmitFiles();
-        success = true;
+        logger.error("transport timer expired before callback");
       }
-      cb(success);
     });
   } else {
     logger.error("unexpected: - transportTimer running");
@@ -427,21 +430,21 @@ function processDirectoryFiles(transmitDir, err, files) {
     processDirectoryFile(0, function(err) {
       if (err) {
         logger.error("failure during file processing: " + err.message);
-        transmitTimer = setTimeout(transmitData,config.get().transmitCheckFrequency*60*1000);
+        startTransmitTimer();
       } else {
         logger.info("transmitting " + transmitPayload.length + " bytes");
         doTransmit(transmitPayload, function(ok) {
           if (ok === true) {
             logger.info("transmit success - rescheduling in " + config.get().transmitCheckFrequency + " mins");
           } else {
-            logger.info("transmit failed - rescheduling in " + config.get().transmitCheckFrequency + " mins");
+            logger.error("transmit failed - rescheduling in " + config.get().transmitCheckFrequency + " mins");
           }
-          transmitTimer = setTimeout(transmitData,config.get().transmitCheckFrequency*60*1000);
+          startTransmitTimer();
         });
       }
     });
   } else {
-    transmitTimer = setTimeout(transmitData,config.get().transmitCheckFrequency*60*1000);
+    startTransmitTimer();
   }
 }
 
@@ -449,6 +452,11 @@ function transmitData() {
   transmitFiles = [];
   var transmitDir = path.join(__dirname,'transmit');
   fs.readdir(transmitDir, function(err, files) { processDirectoryFiles(transmitDir, err, files); } );
+}
+
+function startTransmitTimer(interval) {
+  interval = interval || (config.get().transmitCheckFrequency*60*1000);
+  transmitTimer = setTimeout(transmitData,interval);
 }
 
 initialise();
