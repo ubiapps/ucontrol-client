@@ -47,7 +47,7 @@ function checkSMSUpdate() {
       shell.exec("git reset --hard origin/" + config.get().smsRemoteBranch, function(code,output,err) {
         logger.info("git SMS processor reset finished: " + code + " stdout: " + output + " stderr: " + err);
         if (code === 0 && !upToDate) {
-          shell.exec("npm install --logLevel verbose");
+          shell.exec("npm install --loglevel verbose");
         }
         checkUpdate();
       });
