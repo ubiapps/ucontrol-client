@@ -164,7 +164,7 @@ setWorkingDirectory();
 if (config.getDiagnostics("checkForUpdates") === true) {
   // Wait a while before checking updates - to all 3g connection to establish.
   logger.info("will check for updates in 60 secs");
-  setTimeout(checkUpdate,60000);
+  setTimeout(checkSMSUpdate,60000);
 } else {  
   startMonitor();
 }
