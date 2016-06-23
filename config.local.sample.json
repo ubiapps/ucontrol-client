@@ -9,7 +9,7 @@
       "name": "CO2"
     },
     "emonTH-19": {
-      "name": "temp/humid 1",
+      "name": "living room",
       "type": "emonTH",
       "nodeId": 19,
       "log": {
@@ -18,7 +18,7 @@
       }
     },
     "emonTH-20": {
-      "name": "temp/humid 2",
+      "name": "boiler",
       "type": "emonTH",
       "nodeId": 20,
       "log": {
