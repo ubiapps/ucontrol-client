@@ -32,6 +32,7 @@ var transmitFiles = [];
 var transportTimeoutTimer = 0;
 var transportTimeoutInterval = 1 * 60 * 1000;  // 1 min timeout.
 var wiredSensorData = {};
+var smsMonitor = new (require("nqm-k4203-z-interface"))();
 
 var getFS20Port = function() {
   return config.getLocal("fs20Port","");
@@ -127,23 +128,33 @@ var callHome = function() {
       }
     }
   }
-  var hello = {
-    version: config.get().version,
-    deviceId: config.getLocal("devKey",""),
-    name: config.getLocal("name",""),
-    sensors: sensors
-  };
-  transport.sendCommand("h", hello, function(err, resp) {
-    if (err !== null) {
-      logger.error("failed to call home: " + JSON.stringify(err));
-      setTimeout(callHome,config.get().registrationFrequency*60*1000);
+  smsMonitor.getParam("msisdn", function(err, data) {
+    var msisdn;
+    if (err) {
+      logger.error("failed to get msisdn: %s", err.message);
     } else {
-      logger.info("called home ok " + JSON.stringify(resp));
-      if (resp.checkForUpdates === true) {
-        config.setDiagnostics("checkForUpdates",true);
-        utils.scheduleReboot(0);
-      }
+      msisdn = data && data.msisdn ? data.msisdn : "unknown";
     }
+    var hello = {
+      version: config.get().version,
+      deviceId: config.getLocal("devKey",""),
+      name: config.getLocal("name",""),
+      sensors: sensors,
+      msisdn: msisdn 
+    };
+    logger.info("calling home with %j", hello);
+    transport.sendCommand("h", hello, function(err, resp) {
+      if (err !== null) {
+        logger.error("failed to call home: " + JSON.stringify(err));
+        setTimeout(callHome,config.get().registrationFrequency*60*1000);
+      } else {
+        logger.info("called home ok " + JSON.stringify(resp));
+        if (resp.checkForUpdates === true) {
+	        config.setDiagnostics("checkForUpdates",true);
+	        utils.scheduleReboot(0);
+        }
+      }
+    });    
   });
 };
 

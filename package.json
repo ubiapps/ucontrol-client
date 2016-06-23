@@ -17,6 +17,8 @@
   },
   "dependencies": {
     "debug": "~2.2.0",
+    "lodash": "^4.13.1",
+    "nqm-k4203-z-interface": "git+https://github.com/nqminds/nqm-k4203-z-interface.git",
     "request": "~2.40.0",
     "serialport": "~1.4.5",
     "shelljs": "^0.7.0"
