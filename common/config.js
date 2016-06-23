@@ -29,7 +29,7 @@ var loadLocal = function() {
         fs.writeFileSync(localConfigPath + ".bak", txt);
       }
     } catch (e) {
-      logger.error("failed to parse config file - aborting...");
+      logger.error("failed to parse config file %s - aborting... [%s]", localConfigPath, e.message);
       process.exit();
     }
   } else {
