@@ -123,7 +123,7 @@
               for (var i = 0, len = deviceConfig.length; i < len; i++) {
                 if (monitoredDevice.log.hasOwnProperty(deviceConfig[i].name)) {
                   var dataItem = ((parseInt(split[dataIndex]) + parseInt(split[dataIndex+1])*256) * deviceConfig[i].scale).toFixed(1);
-                  logObj[deviceConfig[i].name] = dataItem;
+                  logObj[deviceConfig[i].name] = parseFloat(dataItem);
                 }
                 dataIndex += 2;
               }
