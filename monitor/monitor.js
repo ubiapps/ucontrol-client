@@ -225,6 +225,7 @@ var initialise = function() {
 
   // Ensure log folders exist.
   logger.info("checking log folders");
+  createFolder(diskPath, "");
   createFolder(diskPath, "logs");
   createFolder(diskPath, "transmit");
   createFolder(diskPath, "pending");
