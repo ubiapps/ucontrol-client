@@ -11,11 +11,14 @@ var shutdown = function() {
 };
 
 // Reboot after the given time interval.
-var scheduleReboot = function(timeout) {
+var scheduleReboot = function(timeout, cleanup) {
   var elapse;
 
+  if (typeof timeout === "function") {
+    cleanup = timeout;
+  }
   // If no timeout given default to midnight.
-  if (typeof timeout === "undefined") {
+  if (typeof timeout === "undefined" || typeof timeout === "function") {
     var midnight = new Date();
     midnight.setUTCHours(24,0,0,0);
     elapse = midnight.getTime() - Date.now();
@@ -24,6 +27,9 @@ var scheduleReboot = function(timeout) {
   }
 
   var reboot = function() {
+    if (typeof cleanup === "function") {
+      cleanup();
+    }
     logger.info("rebooting....");
     shell.exec("sync; sudo reboot");
   };

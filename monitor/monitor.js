@@ -1,6 +1,6 @@
 "use strict";
 
-var fs = require("fs");
+var fs = require("fs-extra");
 var path = require("path");
 
 var utils = require("../common/utils");
@@ -33,6 +33,10 @@ var transportTimeoutTimer = 0;
 var transportTimeoutInterval = 1 * 60 * 1000;  // 1 min timeout.
 var wiredSensorData = {};
 var smsMonitor = new (require("nqm-k4203-z-interface"))();
+
+var diskPath = path.join(__dirname, "data");
+var rootPath = config.getLocal("useTemp", false) ? "/tmp/data" : diskPath;
+var diskTimer = 0;
 
 var getFS20Port = function() {
   return config.getLocal("fs20Port","");
@@ -151,18 +155,22 @@ var callHome = function() {
         logger.info("called home ok " + JSON.stringify(resp));
         if (resp.checkForUpdates === true) {
 	        config.setDiagnostics("checkForUpdates",true);
-	        utils.scheduleReboot(0);
+          if (config.get().useTemp) {
+            utils.scheduleReboot(0, saveToDisk);
+          } else {
+            utils.scheduleReboot(0);
+          }
         }
       }
     });    
   });
 };
 
-var createFolder = function(name) {
-  var folderPath = path.join(__dirname,name);
+var createFolder = function(path, name) {
+  var folderPath = path.join(path,name);
   try {
     if (!fs.existsSync(folderPath)) {
-      fs.mkdir(folderPath);
+      fs.mkdirSync(folderPath);
     }
   } catch (e) {
     // Probably because folder already exists - do nothing.
@@ -207,13 +215,22 @@ var checkRegistration = function() {
 var initialise = function() {
   // Schedule re-boot at midnight.
   logger.info("scheduling reboot");
-  utils.scheduleReboot();
+  if (config.get().useTemp) {
+    utils.scheduleReboot(saveToDisk);
+  } else {
+    utils.scheduleReboot();
+  }
+  
 
   // Ensure log folders exist.
   logger.info("checking log folders");
-  createFolder("logs");
-  createFolder("transmit");
-  createFolder("pending");
+  createFolder(diskPath, "logs");
+  createFolder(diskPath, "transmit");
+  createFolder(diskPath, "pending");
+
+  if (config.get().useTemp === true) {
+    fs.copySync(diskPath, "/tmp"); // Copy folder structure into memory
+  }
 
   moveAllPendingFiles();
 
@@ -240,7 +257,7 @@ function findNextPendingFile() {
   var pendingFile;
   do {
     pendingFileCount++;
-    pendingFile = path.join(__dirname,'pending/' + pendingFileCount + '.log');
+    pendingFile = path.join(rootPath,'pending/' + pendingFileCount + '.log');
   } while(fs.existsSync(pendingFile));
 
   return pendingFile;
@@ -249,16 +266,16 @@ function findNextPendingFile() {
 function moveAllPendingFiles() {
   // Clear pending folder.
   logger.info("moving pending logs to transmit folder");
-  var pendingFiles = fs.readdirSync(path.join(__dirname,"pending"));
+  var pendingFiles = fs.readdirSync(path.join(rootPath,"pending"));
   for (var i = 0, len = pendingFiles.length; i < len && i < config.get().fileMoveThreshold; i++) {
-    var pendingFile = path.join(__dirname,"pending",pendingFiles[i]);
+    var pendingFile = path.join(rootPath,"pending",pendingFiles[i]);
     pendingToTransmit(pendingFile);
   }
 }
 
 function pendingToTransmit(file) {
   var fileOnly = path.basename(file);
-  var transmitFile = path.join(__dirname,'transmit/' + fileOnly);
+  var transmitFile = path.join(rootPath,'transmit/' + fileOnly);
   try {
     if (!fs.existsSync(transmitFile)) {
       fs.renameSync(file,transmitFile);
@@ -276,7 +293,7 @@ function isMonitored(deviceCode) {
 
 function logData(data) {
   // Add packet to pending file
-  var pendingFile = path.join(__dirname,'pending/' + pendingFileCount + '.log');
+  var pendingFile = path.join(rootPath,'pending/' + pendingFileCount + '.log');
   fs.appendFileSync(pendingFile,data + "\n");
 
   pendingPacketCount++;
@@ -325,7 +342,7 @@ function onPacketFS20Received(timestamp, packet) {
   var packetDate = new Date(timestamp);
 
   // Add packet to catch-all log file.
-  var logFile = path.join(__dirname,'logs/fhz-' + packetDate.getUTCDate() + '-' + packetDate.getUTCMonth() + '-' + packetDate.getUTCFullYear() + '.log');
+  var logFile = path.join(rootPath,'logs/fhz-' + packetDate.getUTCDate() + '-' + packetDate.getUTCMonth() + '-' + packetDate.getUTCFullYear() + '.log');
   fs.appendFileSync(logFile,timestamp + " " + packet.toString() + "\n");
 
   var adapter = fhtMonitor.getAdapter(packet);
@@ -461,13 +478,37 @@ function processDirectoryFiles(transmitDir, err, files) {
 
 function transmitData() {
   transmitFiles = [];
-  var transmitDir = path.join(__dirname,'transmit');
+  var transmitDir = path.join(rootPath,'transmit');
   fs.readdir(transmitDir, function(err, files) { processDirectoryFiles(transmitDir, err, files); } );
 }
 
 function startTransmitTimer(interval) {
   interval = interval || (config.get().transmitCheckFrequency*60*1000);
   transmitTimer = setTimeout(transmitData,interval);
+}
+
+function startDiskSaver(interval) {
+  interval = interval || (config.get().diskWriteFrequency*60*1000);
+  diskTimer = setTimeout(saveToDisk, interval);
+}
+
+function saveToDisk() {
+  try {
+    // Remove old backup and create new one
+    fs.removeSync(diskPath + "-old");
+    fs.renameSync(diskPath, diskPath + "-old");
+    // Recreate directory structure on disk
+    createFolder(diskPath, "");
+    createFolder(diskPath, "logs");
+    createFolder(diskPath, "transmit");
+    createFolder(diskPath, "pending");
+    fs.copySync(rootPath, diskPath); // Copy from memory to disk
+    logger.info("saved to disk - rescheduling in " + config.get().diskWriteFrequency + " mins");
+    startDiskSaver();
+  } catch (err) {
+    logger.error("save to disk failed - rescheduling in " + config.get().diskWriteFrequency + " mins");
+    startDiskSaver();
+  }
 }
 
 initialise();
