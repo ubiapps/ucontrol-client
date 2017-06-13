@@ -167,8 +167,8 @@ var callHome = function() {
   });
 };
 
-var createFolder = function(path, name) {
-  var folderPath = path.join(path,name);
+var createFolder = function(targetPath, name) {
+  var folderPath = path.join(targetPath,name);
   try {
     if (!fs.existsSync(folderPath)) {
       fs.mkdirSync(folderPath);
