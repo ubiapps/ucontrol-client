@@ -17,7 +17,6 @@
   },
   "dependencies": {
     "debug": "~2.2.0",
-    "fs-extra": "^3.0.1",
     "lodash": "^4.13.1",
     "nqm-k4203-z-interface": "git+https://github.com/nqminds/nqm-k4203-z-interface.git",
     "request": "~2.40.0",

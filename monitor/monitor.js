@@ -1,6 +1,7 @@
 "use strict";
 
-var fs = require("fs-extra");
+var fs = require("fs");
+var shell = require("shelljs");
 var path = require("path");
 
 var utils = require("../common/utils");
@@ -229,7 +230,7 @@ var initialise = function() {
   createFolder(diskPath, "pending");
 
   if (config.get().useTemp === true) {
-    fs.copySync(diskPath, "/tmp"); // Copy folder structure into memory
+    shell.cp("-R", diskPath, "/tmp"); // Copy folder structure into memory
   }
 
   moveAllPendingFiles();
@@ -495,14 +496,14 @@ function startDiskSaver(interval) {
 function saveToDisk() {
   try {
     // Remove old backup and create new one
-    fs.removeSync(diskPath + "-old");
+    shell.rm("-rf", diskPath + "-old");
     fs.renameSync(diskPath, diskPath + "-old");
     // Recreate directory structure on disk
     createFolder(diskPath, "");
     createFolder(diskPath, "logs");
     createFolder(diskPath, "transmit");
     createFolder(diskPath, "pending");
-    fs.copySync(rootPath, diskPath); // Copy from memory to disk
+    shell.cp("-R", rootPath, diskPath); // Copy from memory to disk
     logger.info("saved to disk - rescheduling in " + config.get().diskWriteFrequency + " mins");
     startDiskSaver();
   } catch (err) {
