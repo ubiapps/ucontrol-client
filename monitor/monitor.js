@@ -35,8 +35,9 @@ var transportTimeoutInterval = 1 * 60 * 1000;  // 1 min timeout.
 var wiredSensorData = {};
 var smsMonitor = new (require("nqm-k4203-z-interface"))();
 
-var diskPath = path.join(__dirname, "data");
-var rootPath = config.get().useTemp ? "/tmp/data" : diskPath;
+// Determine where files should be written
+var diskPath = path.join(__dirname, "data"); // Disk path for long term storage
+var rootPath = config.get().useTemp ? "/tmp/data" : diskPath; // write to tmp or disk
 var diskTimer = 0;
 
 var getFS20Port = function() {
@@ -216,7 +217,7 @@ var checkRegistration = function() {
 var initialise = function() {
   // Schedule re-boot at midnight.
   logger.info("scheduling reboot");
-  if (config.get().useTemp) {
+  if (config.get().useTemp) { // If in temp mode save to disk before reboot
     utils.scheduleReboot(saveToDisk);
   } else {
     utils.scheduleReboot();
@@ -232,7 +233,7 @@ var initialise = function() {
 
   if (config.get().useTemp === true) {
     shell.cp("-R", diskPath, "/tmp"); // Copy folder structure into memory
-    startDiskSaver();
+    startDiskSaver(); // Start timer to save to disk at intervals
   }
 
   moveAllPendingFiles();
