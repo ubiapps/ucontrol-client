@@ -502,10 +502,8 @@ function saveToDisk() {
     fs.renameSync(diskPath, diskPath + "-old");
     // Recreate directory structure on disk
     createFolder(diskPath, "");
-   // createFolder(diskPath, "logs");
-   // createFolder(diskPath, "transmit");
-   // createFolder(diskPath, "pending");
     shell.cp("-R", path.join(rootPath, "*"), diskPath); // Copy from memory to disk
+    shell.cp("/tmp/diagnostic.json", __dirname); // Save diagnostic information
     logger.info("saved to disk - rescheduling in " + config.get().diskWriteFrequency + " mins");
     startDiskSaver();
   } catch (err) {
