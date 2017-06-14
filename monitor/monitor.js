@@ -231,13 +231,9 @@ var initialise = function() {
   createFolder(diskPath, "pending");
 
   if (config.get().useTemp === true) {
-    logger.error("USING TEMP");
     shell.cp("-R", diskPath, "/tmp"); // Copy folder structure into memory
     startDiskSaver();
   }
-
-  logger.error(rootPath);
-  logger.error(diskPath);
 
   moveAllPendingFiles();
 
@@ -510,7 +506,7 @@ function saveToDisk() {
    // createFolder(diskPath, "transmit");
    // createFolder(diskPath, "pending");
     shell.cp("-R", path.join(rootPath, "*"), diskPath); // Copy from memory to disk
-    logger.error("saved to disk - rescheduling in " + config.get().diskWriteFrequency + " mins");
+    logger.info("saved to disk - rescheduling in " + config.get().diskWriteFrequency + " mins");
     startDiskSaver();
   } catch (err) {
     logger.error("save to disk failed - rescheduling in " + config.get().diskWriteFrequency + " mins");
