@@ -232,6 +232,7 @@ var initialise = function() {
 
   if (config.get().useTemp === true) {
     shell.cp("-R", diskPath, "/tmp"); // Copy folder structure into memory
+    startDiskSaver();
   }
 
   moveAllPendingFiles();
