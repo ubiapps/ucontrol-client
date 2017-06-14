@@ -501,10 +501,10 @@ function saveToDisk() {
     fs.renameSync(diskPath, diskPath + "-old");
     // Recreate directory structure on disk
     createFolder(diskPath, "");
-    createFolder(diskPath, "logs");
-    createFolder(diskPath, "transmit");
-    createFolder(diskPath, "pending");
-    shell.cp("-R", rootPath, diskPath); // Copy from memory to disk
+   // createFolder(diskPath, "logs");
+   // createFolder(diskPath, "transmit");
+   // createFolder(diskPath, "pending");
+    shell.cp("-R", path.join(rootPath, "*"), diskPath); // Copy from memory to disk
     logger.info("saved to disk - rescheduling in " + config.get().diskWriteFrequency + " mins");
     startDiskSaver();
   } catch (err) {
