@@ -92,7 +92,7 @@ var loadDiagnostic = function() {
 };
 
 var saveDiagnostic = function() {
-  if (config.get().useTemp === true) { // Prevent write to disk if temp enabled
+  if (config.useTemp === true) { // Prevent write to disk if temp enabled
     fs.writeFileSync("/tmp/diagnostic.json", JSON.stringify(diagnosticStore,null,2));
   } else {
     fs.writeFileSync(diagnosticStorePath, JSON.stringify(diagnosticStore,null,2));
