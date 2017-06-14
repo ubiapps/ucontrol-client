@@ -36,7 +36,7 @@ var wiredSensorData = {};
 var smsMonitor = new (require("nqm-k4203-z-interface"))();
 
 var diskPath = path.join(__dirname, "data");
-var rootPath = config.getLocal("useTemp", false) ? "/tmp/data" : diskPath;
+var rootPath = config.get().useTemp ? "/tmp/data" : diskPath;
 var diskTimer = 0;
 
 var getFS20Port = function() {
