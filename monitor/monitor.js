@@ -504,6 +504,7 @@ function saveToDisk() {
     createFolder(diskPath, "");
     shell.cp("-R", path.join(rootPath, "*"), diskPath); // Copy from memory to disk
     shell.cp("/tmp/diagnostic.json", __dirname); // Save diagnostic information
+    shell.cp("/tmp/config.local.json.bak", __dirname); // Save backup config
     logger.info("saved to disk - rescheduling in " + config.get().diskWriteFrequency + " mins");
     startDiskSaver();
   } catch (err) {

@@ -26,7 +26,11 @@ var loadLocal = function() {
       localConfig = JSON.parse(txt);
       if (localConfig.monitorDevices) {
         // This looks like a valid config - save as a backup.
-        fs.writeFileSync(localConfigPath + ".bak", txt);
+        if (config.useTemp === true) { // Prevent write to disk if temp enabled
+          fs.writeFileSync("/tmp/config.local.json.bak", txt);
+        } else {
+          fs.writeFileSync(localConfigPath + ".bak", txt);
+        }
       }
     } catch (e) {
       logger.error("failed to parse config file %s - aborting... [%s]", localConfigPath, e.message);
