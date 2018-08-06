@@ -1,0 +1,31 @@
+extends layout
+
+block content
+    br
+    form(name='input', action='setDevice', method='POST')
+        .panel.panel-default
+            .panel-heading sensors
+            .panel-body
+                p Only data from the selected sensors will be broadcast to the hub.
+                - if (Object.keys(local.seenDevices).length > 0) {
+                    p The following sensors are in range.
+                - } else {
+                    p No sensors found.
+                - }
+                a.btn.btn-default.pull-right(href="/changeDevice") refresh
+            ul.list-group
+                - for (var d in devices) {
+                    li.list-group-item
+                        div.radio
+                            label
+                                input(id="deviceName-#{d}", type="text", value="#{devices[d].name}", name="deviceName-#{d}", style="margin-right: 20px;")
+                                - if (local.monitorDevices && local.monitorDevices.hasOwnProperty(d)) {
+                                    input(id="device-#{d}", type='checkbox', value='#{d}', name='device-#{d}',checked)
+                                    | #{d}
+                                - } else {
+                                    input(id="device-#{d}", type='checkbox', value='#{d}', name='device-#{d}')
+                                    | #{d}
+                                - }
+                - }
+            .panel-footer
+                button.btn.btn-default set sensors

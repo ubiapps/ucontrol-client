@@ -1,8 +1,20 @@
 {
-  "networkErrorRebootTime": 300000,
-  "server": "http://ucontrolapi.ubiapps.com",
-  "x-api-key": "c9a66",
+  "version": 33,
+  "networkErrorRebootTime": 5,
+  "debugServer": "192.168.1.81",
+  "southamptonServer": "192.168.181.131",
+  "server": "54.246.122.56",
+  "serverPort": 8092,
+  "x-api-key": "c9a63",
   "user": "ubiapps",
   "pass": "sppaibu",
-  "transmitFrequency": 10000
+  "transmitCheckFrequency": 15,
+  "transmitErrorFrequency": 15,
+  "remoteBranch": "emon-003",
+  "smsRemoteBranch": "emon-003",
+  "pendingPacketThreshold": 1,
+  "maximumTransmitKB": 250,
+  "fileMoveThreshold": 250,
+  "registrationFrequency": 15,
+  "cozirPollInterval": 1
 }

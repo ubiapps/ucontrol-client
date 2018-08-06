@@ -1,6 +1,6 @@
 {
   "name": "ucontrol-client",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "ucontrol client application",
   "main": "boot/boot.js",
   "scripts": {
@@ -16,8 +16,11 @@
     "url": "https://github.com/ubiapps/ucontrol-client/issues"
   },
   "dependencies": {
-    "winston": "~0.7.3",
+    "debug": "~2.2.0",
+    "lodash": "^4.13.1",
+    "nqm-k4203-z-interface": "git+https://github.com/nqminds/nqm-k4203-z-interface.git",
+    "request": "~2.40.0",
     "serialport": "~1.4.5",
-    "request": "~2.40.0"
+    "shelljs": "^0.7.0"
   }
 }

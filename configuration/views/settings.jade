@@ -1,0 +1,72 @@
+extends layout
+
+block content
+    br
+    - if (rebootRequired) {
+        .alert.alert-warning Reboot required. Changes to settings won't take effect until the unit is rebooted.
+    - }
+    .panel.panel-default
+        .panel-heading settings
+            a.btn.btn-default.pull-right(href="/")
+                span.glyphicon.glyphicon-refresh
+        .panel-body
+            p local system settings
+        table.table.table-striped
+            tr
+                th Version
+                td #{static.version}
+                    a.btn.btn-default.pull-right(href="/versionUpdate",style="width:80px") update
+            tr
+                th Unit name
+                td
+                    - if (local.name && local.name.length > 0) {
+                        | #{local.name}
+                    - } else {
+                        form(action="/setName",method="POST")
+                            div.input-group
+                                input.form-control(type="text",name="unitName",value="#{local.name || ''}",placeholder="enter name")
+                                span.input-group-btn
+                                    button.btn.btn-default set
+                - }
+            tr
+                th Unit id
+                td #{local.devKey || "<not set>"}
+                    a.btn.btn-default.pull-right(href="/resetDevice",style="width:80px") reset
+            tr
+                th Sensors
+                td #{JSON.stringify(local.monitorDevices) || "<not set>"}
+                    a.btn.btn-default.pull-right(href="/changeDevice",style="width:80px") change
+            tr
+                th Session transmit (bytes)
+                td #{local.sessionTransmit}
+            tr
+                th Total transmit (bytes)
+                td #{local.totalTransmit}
+            tr
+                th Update fail count
+                td #{local.gitFailCount}
+            tr
+                th FS20 port
+                td
+                    form(action="/setPort",method="POST")
+                        div.input-group
+                            input.form-control(type="text",name="fs20Port",value="#{local.fs20Port || '/dev/ttyAMA0'}")
+                            span.input-group-btn
+                                button.btn.btn-default set
+            tr
+                th Admin web port
+                td
+                    form(action="/setWebPort",method="POST")
+                        div.input-group
+                            input.form-control(type="number",name="adminWebPort",value="#{local.adminWebPort || 80}")
+                            span.input-group-btn
+                                button.btn.btn-default set
+            tr
+                th Packet threshold
+                td
+                    form(action="/setThreshold",method="POST")
+                        div.input-group
+                            input.form-control(type="text",value="#{static.pendingPacketThreshold}")
+                            span.input-group-btn
+                                button.btn.btn-default set
+

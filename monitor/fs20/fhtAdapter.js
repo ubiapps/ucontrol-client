@@ -1,4 +1,6 @@
 (function () {
+  var zeroFill = require("./zeroFill");
+
   // Offsets of FHT data in packet data
   var DEVICE_INDEX = 0;     // Device code 1
   var DEVICE_INDEX_2 = 1;   // Device code 2
@@ -29,7 +31,7 @@
   var ACTUATOR_SYNCING = 12;
   var ACTUATOR_TEST = 14;
   var ACTUATOR_PAIRING = 15;
-      
+
   // Constructor
   function fhtAdapter(packet) {
     this.packet = packet;
@@ -38,7 +40,7 @@
   fhtAdapter.APPLY_TO_WRONG_DEVICE = -1;
   
   fhtAdapter.prototype.applyTo = function(fht) {
-    if (fht.device && fht.device.length > 0 && this.getDeviceCode() !== fht.device) {
+    if (fht.device && fht.device.length > 0 && this.getDeviceCode().toLowerCase() !== fht.device.toLowerCase()) {
       return fhtAdapter.APPLY_TO_WRONG_DEVICE;
     }
     
@@ -58,7 +60,7 @@
       case 0x08:
         // Actuator function.
         if (this.hasValvePosition()) {
-          fht.setData("valvePosition", this.getValvePosition());
+          fht.setData("valvePosition", this.getValvePosition().toFixed(1));
         }
         break;
       case DESIRED_TEMP:
@@ -66,11 +68,12 @@
         break;
       case MEASURED_TEMP_LOW:
         fht.setData("lowTemp", this.packet.get(PARAM_INDEX));
-        fht.setData("measuredTemp", (fht.getData("highTemp") * 256 + fht.getData("lowTemp"))/10);
+        // Only set temperature on receipt of high-temp portion (low-temp is always followed immediately by high-temp).
+        //fht.setData("temperature", (fht.getData("highTemp") * 256 + fht.getData("lowTemp"))/10);
         break;
       case MEASURED_TEMP_HIGH:
         fht.setData("highTemp",this.packet.get(PARAM_INDEX));
-        fht.setData("measuredTemp", (fht.getData("highTemp") * 256 + fht.getData("lowTemp"))/10);
+        fht.setData("temperature", (fht.getData("highTemp") * 256 + fht.getData("lowTemp"))/10);
         break;
       case DAY_TEMP:
         fht.setData("dayTemp", this.packet.get(PARAM_INDEX)/2);
@@ -83,16 +86,28 @@
     }
     
     return 0;
-  }
+  };
     
   fhtAdapter.prototype.getDeviceCode = function() {
-    return this.packet.getHeader() + this.packet.get(DEVICE_INDEX).toString(16) + this.packet.get(DEVICE_INDEX+1).toString(16);
-  }
+    var deviceCode;
+    var c1 = this.packet.get(DEVICE_INDEX);
+    if (typeof c1 !== "undefined") {
+      var c2 = this.packet.get(DEVICE_INDEX+1);
+      if (typeof c2 !== "undefined") {
+        deviceCode = this.packet.getHeader() + zeroFill(c1.toString(16),2) + zeroFill(c2.toString(16),2);
+      } else {
+        deviceCode = this.packet.getHeader() + zeroFill(c1.toString(16),2);
+      }
+    } else {
+      deviceCode = this.packet.getHeader();
+    }
+    return deviceCode;
+  };
   
   fhtAdapter.prototype.hasValvePosition = function() {
     var status = this.packet.get(STATUS_INDEX);
     return this.packet.get(FUNC_INDEX) < 9 && ((status & 0x0f) == ACTUATOR_SYNC || (status & 0x0f) == ACTUATOR_POSITION);
-  }
+  };
   
   fhtAdapter.prototype.getValvePosition = function() {
     if (!this.hasValvePosition()) {
@@ -100,7 +115,7 @@
     }
     
     return (parseFloat(this.packet.get(PARAM_INDEX))/255.0) * 100;
-  }
+  };
   
   fhtAdapter.prototype.toString = function() {
     var cmdString;
@@ -189,7 +204,7 @@
     }
     
     return cmdString;
-  }
+  };
   
   module.exports = fhtAdapter;
 })();

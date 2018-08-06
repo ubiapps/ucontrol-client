@@ -1,16 +1,44 @@
+"use strict";
+
 var fs = require("fs");
 var path = require("path");
-var config = require("../config.json");
-var localConfigPath = path.join(__dirname,"../","config.local.json");
-var localConfig = {};
-
-var load = function() {
-  return config;
+var fs20Config = require("../fs20Config.json");
+var utils = require("./utils");
+var logger = {
+  info: require("debug")("config"),
+  error: require("debug")("error:config")
 };
 
+/******************************************************************************
+ * system config
+ */
+var config = require("../config.json");
+
+/******************************************************************************
+ * local config
+ */
+var localConfigPath = path.join(__dirname,"../","config.local.json");
+var localConfig = {};
 var loadLocal = function() {
   if (fs.existsSync(localConfigPath)) {
-    localConfig = require(localConfigPath);
+    var txt = fs.readFileSync(localConfigPath);
+    try {
+      localConfig = JSON.parse(txt);
+      if (localConfig.monitorDevices) {
+        // This looks like a valid config - save as a backup.
+        if (config.useTemp === true) { // Prevent write to disk if temp enabled
+          fs.writeFileSync("/tmp/config.local.json.bak", txt);
+        } else {
+          fs.writeFileSync(localConfigPath + ".bak", txt);
+        }
+      }
+    } catch (e) {
+      logger.error("failed to parse config file %s - aborting... [%s]", localConfigPath, e.message);
+      process.exit();
+    }
+  } else {
+    logger.error("config file missing - creating new");
+    localConfig = {};
   }
   return localConfig;
 };
@@ -20,11 +48,16 @@ var saveLocal = function() {
 };
 
 var getLocal = function(name, def) {
-  if (!localConfig.hasOwnProperty(name)) {
-    localConfig[name] = def;
-  }
+  loadLocal();
+  if (typeof name === "undefined") {
+    return localConfig;
+  } else {
+    if (!localConfig.hasOwnProperty(name)) {
+      localConfig[name] = def;
+    }
 
-  return localConfig[name];
+    return localConfig[name];
+  }
 };
 
 var setLocal = function(name,val) {
@@ -32,10 +65,78 @@ var setLocal = function(name,val) {
   saveLocal();
 };
 
+var resetLocal = function() {
+  delete localConfig.fs20Code;
+  delete localConfig.devKey;
+  delete localConfig.name;
+  saveLocal();
+};
+
 loadLocal();
 
+/******************************************************************************
+ * diagnostic store
+ */
+var diagnosticStorePath = path.join(__dirname,"../","diagnostic.json");
+var diagnosticStore = {};
+var loadDiagnostic = function() {
+  if (fs.existsSync(diagnosticStorePath)) {
+    var txt = fs.readFileSync(diagnosticStorePath);
+    try {
+      diagnosticStore = JSON.parse(txt);
+    } catch (e) {
+      logger.error("failed to diagnostic file - resetting to empty");
+      diagnosticStore = {};
+    }
+  } else {
+    logger.error("diagnostic store file not found - creating new");
+    diagnosticStore = {};
+  }
+  return diagnosticStore;
+};
+
+var saveDiagnostic = function() {
+  if (config.useTemp === true) { // Prevent write to disk if temp enabled
+    fs.writeFileSync("/tmp/diagnostic.json", JSON.stringify(diagnosticStore,null,2));
+  } else {
+    fs.writeFileSync(diagnosticStorePath, JSON.stringify(diagnosticStore,null,2));
+  }
+};
+
+var getDiagnostics = function(name, def) {
+  loadDiagnostic();
+  if (typeof name === "undefined") {
+    return diagnosticStore;
+  } else {
+    if (!diagnosticStore.hasOwnProperty(name)) {
+      diagnosticStore[name] = def;
+    }
+    return diagnosticStore[name];
+  }  
+};
+
+var setDiagnostics = function(name, val) {
+  diagnosticStore[name] = val;
+  saveDiagnostic();  
+};
+
+var resetDiagnostics = function() {
+  diagnosticStore.gitFailCount = 0;
+  diagnosticStore.fs20Port = "/dev/ttyAMA0";
+  diagnosticStore.sessionTransmit = 0;
+  diagnosticStore.totalTransmit = 0;
+  diagnosticStore.seenDevices = {};
+  saveDiagnostic();
+};
+
+loadDiagnostic();
+
 module.exports = {
-  get: load,
+  get: function() { return config; },
+  getFS20: function() { return fs20Config; },
   getLocal: getLocal,
-  setLocal: setLocal
-}
+  setLocal: setLocal,
+  getDiagnostics: getDiagnostics,
+  setDiagnostics: setDiagnostics,
+  resetDiagnostics: resetDiagnostics
+};

@@ -1,0 +1,33 @@
+doctype html5
+html(lang='en')
+    head
+        meta(charset='utf-8')
+        meta(http-equiv='X-UA-Compatible', content='IE=edge')
+        meta(name='viewport', content='width=device-width, initial-scale=1')
+        meta(name='description', content='uControl local settings')
+        link(rel='icon', href='/images/favicon.ico')
+        title local settings - uControl
+        link(href='/bootstrap/css/bootstrap.min.css', rel='stylesheet')
+        link(href='/bootstrap/css/bootstrap-theme.min.css', rel='stylesheet')
+        link(href='/css/style.css', rel='stylesheet')
+        script(src='/js/jquery-1.11.1.min.js')
+        script(src='/bootstrap/js/bootstrap.min.js')
+    body
+        .navbar.navbar-default.navbar-fixed-top(role='navigation')
+            .container
+                .navbar-header
+                    button.navbar-toggle(type='button', data-toggle='collapse', data-target='.navbar-collapse')
+                        span.sr-only Toggle navigation
+                        span.icon-bar
+                        span.icon-bar
+                        span.icon-bar
+                    a.navbar-brand(href='/')
+                        img(src="/images/logo.png", height="32")
+                .collapse.navbar-collapse
+                    ul.nav.navbar-nav
+                        li.dashLink
+                            a(href='/') Settings
+                        li.rebootLink
+                            a(href='/reboot') Reboot!
+        .container
+            block content

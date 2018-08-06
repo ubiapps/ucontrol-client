@@ -1,0 +1,97 @@
+body {
+    padding-top: 50px;
+}
+
+.ecc-template {
+    padding-top: 10px;
+}
+
+.ecc-detail-on {
+    background-color: lightblue !important;
+}
+
+.ecc-detail-off {
+    background-color: lightgreen !important;
+}
+
+.ecc-detail-yes {
+    background-color: lightgreen !important;
+}
+
+/*.ecc-detail-no {*/
+    /*background-color: orange !important;*/
+/*}*/
+
+.ecc-detail-charging {
+    background-color: lightgreen !important;
+}
+
+/*.ecc-detail-not-charging {*/
+    /*background-color: orange !important;*/
+/*}*/
+
+.ecc-detail-update {
+    background-color: forestgreen !important;
+    color: white !important;
+}
+
+.ecc-detail-high {
+    background-color: lightgreen !important;
+}
+
+.ecc-detail-medium {
+    background-color: orange !important;
+}
+
+.ecc-detail-low {
+    background-color: red !important;
+    color: white !important;
+}
+
+.ecc-detail-error {
+    background-color: red !important;
+    color: white !important;
+}
+
+.ecc-detail-OK {
+    background-color: lightgreen !important;
+}
+
+.ecc-car-title {
+    color: #009adc;
+    font-weight: bold;
+    font-size: 1.2em;
+}
+
+.ecc-connectionStatus {
+    color: white;
+    padding: 4px;
+}
+
+.ecc-disconnected {
+    background-color: red;
+}
+
+.ecc-connecting {
+    background-color: orange;
+}
+
+.ecc-connected {
+    background-color: green;
+}
+
+.navbar-brand {
+    padding-top: 10px;
+}
+
+/*th {*/
+    /*text-shadow: #ddd 1px 1px;*/
+    /*border-bottom: 2px solid white;*/
+    /*font-size: .9em;*/
+/*}*/
+
+/*td {*/
+    /*padding: 4px;*/
+    /*border-bottom: 2px solid white;*/
+    /*font-size: .9em;*/
+/*}*/

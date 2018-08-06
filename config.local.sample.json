@@ -1,0 +1,39 @@
+{
+  "name": "<enter unit name>",
+  "cozirPort": "/dev/ttyUSB0",
+  "oemPort": "/dev/ttyAMA0",
+  "oemNetwork": "210",
+  "oemBaud": "38400",
+  "monitorDevices": {
+    "z01": {
+      "name": "CO2"
+    },
+    "emonTH-19": {
+      "name": "living room",
+      "type": "emonTH",
+      "nodeId": 19,
+      "log": {
+        "temperature": true,
+        "humidity": true
+      }
+    },
+    "emonTH-20": {
+      "name": "boiler",
+      "type": "emonTH",
+      "nodeId": 20,
+      "log": {
+        "temperature": true,
+        "humidity": true
+      }
+    },
+    "emonTx-10": {
+      "name": "power",
+      "type": "emonTx",
+      "nodeId": 10,
+      "log": {
+        "power": true,
+        "power2": true
+      }
+    }
+  }
+}

@@ -1,0 +1,80 @@
+{
+  "t": {
+    "parameters": {
+      "name": "temperature",
+      "valveThreshold": "20.0"
+    },
+    "services": {
+      "temperature": {
+        "name": "temperature",
+        "type": "sensor",
+        "subType": "temperature",
+        "units": "\u00B0\u0043"
+      },
+      "valvePosition": {
+        "name": "valve",
+        "type": "actuator",
+        "subType": "valve",
+        "units": "%"
+      }
+    }
+  },
+  "e": {
+    "parameters": {
+      "name": "electricity",
+      "revsPerkWh": 125.0
+    },
+    "services": {
+      "cumulative": {
+        "name": "cumulative",
+        "type": "sensor",
+        "subType": "energy",
+        "units": "kWh"
+      },
+      "interval": {
+        "name": "average",
+        "type": "sensor",
+        "subType": "energy",
+        "units": "kWh"
+      },
+      "peak": {
+        "name": "peak",
+        "type": "sensor",
+        "subType": "energy",
+        "units": "kWh"
+      }
+    }
+  },
+  "k": {
+    "parameters": {
+      "name": "temp/humidity"
+    },
+    "services": {
+      "temperature": {
+        "name": "temperature",
+        "type": "sensor",
+        "subType": "temperature",
+        "units": "\u00B0\u0043"
+      },
+      "humidity": {
+        "name": "humidity",
+        "type": "sensor",
+        "subType": "humidity",
+        "units": "%"
+      }
+    }
+  },
+  "f": {
+    "parameters": {
+      "name": "pir"
+    },
+    "services": {
+      "brightness": {
+        "name": "brightness",
+        "type": "sensor",
+        "subType": "pir",
+        "units": "on/off"
+      }
+    }
+  }
+}
